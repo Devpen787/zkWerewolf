@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, useNavigate, useParams } from 'react-router-dom'
 import CryptoJS from 'crypto-js'
 
+import WelcomePage from './components/WelcomePage';
+
 // Import role images
 import villagerImage from './assets/villager.png';
 import werewolfImage from './assets/werewolf.png';
@@ -564,6 +566,7 @@ function ModeratorView({ players, onPhaseChange }) {
 function App() {
   const [players, setPlayers] = useState([])
   const [gameStarted, setGameStarted] = useState(false)
+  const [showWelcome, setShowWelcome] = useState(true);
 
   // Load players from localStorage on initial component mount
   useEffect(() => {
@@ -591,6 +594,10 @@ function App() {
     setPlayers([]);
     setGameStarted(false);
   }
+
+  const handleStartFromWelcome = () => {
+    setShowWelcome(false);
+  };
   
   return (
     <Router>
@@ -598,7 +605,9 @@ function App() {
         <Route 
           path="/" 
           element={
-            gameStarted ? (
+            showWelcome ? (
+              <WelcomePage onStart={handleStartFromWelcome} />
+            ) : gameStarted ? (
               <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 text-white">
                 <div className="container mx-auto px-4 py-8">
                   <h1 className="text-4xl font-bold text-center mb-8 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
