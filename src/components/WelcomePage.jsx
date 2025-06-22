@@ -7,31 +7,41 @@ import {
   AccordionItemPanel,
 } from 'react-accessible-accordion';
 
+import logoImage from '../assets/logo.png';
 import './WelcomePage.css';
 
 const WelcomePage = ({ onStart }) => {
   return (
     <div className="bg-gray-900 min-h-screen text-white">
-      {/* Hero Section */}
-      <div className="hero-section px-4">
-        <div className="hero-content">
-          <h1 className="text-5xl md:text-7xl font-extrabold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
-            zkWerewolf
-          </h1>
-          <p className="text-lg md:text-xl text-gray-300 mb-8">
-            A privacy-first party game of deception and deduction.
-          </p>
-          <button
-            onClick={onStart}
-            className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-3 px-8 rounded-full transition-all duration-300 transform hover:scale-110 shadow-lg"
-          >
-            Play Now
-          </button>
-        </div>
+      <div className="container mx-auto px-4 py-8 md:py-12 text-center">
+        {/* Logo Image */}
+        <img
+          src={logoImage}
+          alt="zkWerewolf Logo"
+          className="mx-auto w-full max-w-md md:max-w-lg h-auto"
+        />
+
+        {/* Title */}
+        <h1 className="text-5xl md:text-7xl font-extrabold mt-6 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
+          zkWerewolf
+        </h1>
+
+        {/* Subtitle */}
+        <p className="text-lg md:text-xl text-gray-300 mt-4 mb-8 max-w-2xl mx-auto">
+          A privacy-first party game of deception and deduction.
+        </p>
+
+        {/* Play Button */}
+        <button
+          onClick={onStart}
+          className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-4 px-10 rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg text-xl"
+        >
+          Play Now
+        </button>
       </div>
 
       {/* Accordion Section */}
-      <div className="max-w-4xl mx-auto px-4 py-12">
+      <div className="max-w-4xl mx-auto px-4 pt-4 pb-12">
         <Accordion allowZeroExpanded>
           <AccordionItem>
             <AccordionItemHeading>
@@ -59,11 +69,23 @@ const WelcomePage = ({ onStart }) => {
             </AccordionItemHeading>
             <AccordionItemPanel className="accordion__panel">
               <ul className="list-disc list-inside space-y-2">
-                <li><strong>Villager Pig:</strong> No powers, vote to find the werewolves</li>
-                <li><strong>Werewolf:</strong> Eliminate villagers, remain hidden</li>
-                <li><strong>Healer Pig:</strong> Protect one person per night</li>
-                <li><strong>Detective Pig:</strong> Inspect one player each night</li>
-                <li><strong>Moderator:</strong> Orchestrates the flow and reveals results</li>
+                <li>
+                  <strong>Villager Pig:</strong> No powers, vote to find the
+                  werewolves
+                </li>
+                <li>
+                  <strong>Werewolf:</strong> Eliminate villagers, remain hidden
+                </li>
+                <li>
+                  <strong>Healer Pig:</strong> Protect one person per night
+                </li>
+                <li>
+                  <strong>Detective Pig:</strong> Inspect one player each night
+                </li>
+                <li>
+                  <strong>Moderator:</strong> Orchestrates the flow and reveals
+                  results
+                </li>
               </ul>
             </AccordionItemPanel>
           </AccordionItem>
@@ -76,7 +98,9 @@ const WelcomePage = ({ onStart }) => {
             </AccordionItemHeading>
             <AccordionItemPanel className="accordion__panel">
               <p>
-                zkWerewolf is a privacy-first party game using simulated ZK proofs to ensure secret roles and integrity. Built at ZK Hack Berlin 2025 for fun and experimentation.
+                zkWerewolf is a privacy-first party game using simulated ZK
+                proofs to ensure secret roles and integrity. Built at ZK Hack
+                Berlin 2025 for fun and experimentation.
               </p>
             </AccordionItemPanel>
           </AccordionItem>
