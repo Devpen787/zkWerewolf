@@ -3,6 +3,8 @@ import { BrowserRouter as Router, Routes, Route, useNavigate, useParams } from '
 import CryptoJS from 'crypto-js'
 
 import WelcomePage from './components/WelcomePage';
+import Navigation from './components/Navigation';
+import { useGame } from './context/GameContext';
 
 // Import role images
 import villagerImage from './assets/villager.png';
@@ -159,6 +161,13 @@ function GameSetup({ onGameStart }) {
     }
   }
 
+  const handleBackPhase = () => {
+    if (currentPhase === 'names') {
+      setCurrentPhase('count')
+      setPlayerNames([])
+    }
+  }
+
   const handleNameChange = (index, name) => {
     const newNames = [...playerNames]
     newNames[index] = name
@@ -182,32 +191,49 @@ function GameSetup({ onGameStart }) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 text-white">
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-4xl font-bold text-center mb-8 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
-          zkWerewolf
-        </h1>
-        
-        <div className="max-w-2xl mx-auto">
-          <div className="bg-gray-800 rounded-lg p-6 shadow-xl">
-            <h2 className="text-2xl font-semibold mb-6">Game Setup</h2>
+    <div className="min-h-screen text-[#4a3f3c]">
+      <Navigation 
+        showBackToWelcome={true}
+        showBack={currentPhase === 'names'}
+        showNext={currentPhase === 'count'}
+        onBack={handleBackPhase}
+        onNext={handleNextPhase}
+        backText="Back to Player Count"
+        nextText="Next: Enter Names"
+      />
+      
+      <div className="container mx-auto px-4 py-8 pt-20">
+        <div className="max-w-2xl mx-auto mt-12">
+          <div className="bg-[#fdfaf6] rounded-xl p-8 shadow-strong">
+            <h2 className="text-3xl font-semibold mb-8 font-fredoka text-center text-brand-brown-800 drop-shadow-soft">Game Setup</h2>
             
             {currentPhase === 'count' ? (
-              <div className="space-y-4">
+              <div className="space-y-8 text-center">
                 <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Number of Players (4-15)
+                  <label className="block text-lg font-medium mb-4 text-brand-brown-800 font-fredoka">
+                    Number of Players
                   </label>
-                  <input
-                    type="number"
-                    min="4"
-                    max="15"
-                    value={playerCount}
-                    onChange={(e) => setPlayerCount(parseInt(e.target.value) || 4)}
-                    className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  />
+                  <div className="flex items-center justify-center gap-4 mt-2">
+                    <button
+                      onClick={() => setPlayerCount(Math.max(4, playerCount - 1))}
+                      className="w-16 h-16 bg-brand-brown-100 hover:bg-brand-brown-200 text-brand-brown-700 font-bold text-3xl rounded-full transition-all duration-200 shadow-soft hover:shadow-medium flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={playerCount <= 4}
+                    >
+                      -
+                    </button>
+                    <span className="w-24 text-6xl font-bold font-fredoka text-brand-terracotta-500">
+                      {playerCount}
+                    </span>
+                     <button
+                      onClick={() => setPlayerCount(Math.min(15, playerCount + 1))}
+                      className="w-16 h-16 bg-brand-brown-100 hover:bg-brand-brown-200 text-brand-brown-700 font-bold text-3xl rounded-full transition-all duration-200 shadow-soft hover:shadow-medium flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={playerCount >= 15}
+                    >
+                      +
+                    </button>
+                  </div>
                 </div>
-                <div className="text-sm text-gray-300 space-y-1">
+                <div className="text-md text-brand-brown-700 space-y-2 font-fredoka bg-brand-brown-50 p-6 rounded-lg border border-brand-brown-200 shadow-inner">
                   <p>Players: {playerCount}</p>
                   <p>Werewolves: {getWerewolfCount()}</p>
                   <p>Healer: 1</p>
@@ -216,17 +242,17 @@ function GameSetup({ onGameStart }) {
                 </div>
                 <button
                   onClick={handleNextPhase}
-                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105"
+                  className="w-full bg-gradient-to-r from-brand-terracotta-500 to-brand-terracotta-400 hover:from-brand-terracotta-600 hover:to-brand-terracotta-500 text-white font-bold py-4 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-strong text-xl font-fredoka tracking-wide drop-shadow-soft"
                 >
                   Next: Enter Player Names
                 </button>
               </div>
             ) : (
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium mb-4">Enter Player Names</h3>
+              <div className="space-y-6">
+                <h3 className="text-xl font-semibold mb-6 text-brand-brown-800 font-fredoka drop-shadow-soft">Enter Player Names</h3>
                 {playerNames.map((name, index) => (
                   <div key={index}>
-                    <label className="block text-sm font-medium mb-2">
+                    <label className="block text-sm font-medium mb-3 text-brand-brown-700 font-fredoka">
                       Player {index + 1}
                     </label>
                     <input
@@ -234,20 +260,20 @@ function GameSetup({ onGameStart }) {
                       value={name}
                       onChange={(e) => handleNameChange(index, e.target.value)}
                       placeholder={`Player ${index + 1} name`}
-                      className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      className="w-full px-4 py-3 bg-white border border-[#d7ccc8] rounded-lg focus:ring-2 focus:ring-brand-terracotta-400 focus:border-transparent shadow-soft font-fredoka"
                     />
                   </div>
                 ))}
-                <div className="flex space-x-4">
+                <div className="flex space-x-4 pt-4">
                   <button
-                    onClick={() => setCurrentPhase('count')}
-                    className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+                    onClick={handleBackPhase}
+                    className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-4 px-6 rounded-lg transition-all duration-300 font-fredoka tracking-wide shadow-soft hover:shadow-medium"
                   >
                     Back
                   </button>
                   <button
                     onClick={handleStartGame}
-                    className="flex-1 bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white font-bold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105"
+                    className="flex-1 bg-gradient-to-r from-brand-terracotta-500 to-brand-terracotta-400 hover:from-brand-terracotta-600 hover:to-brand-terracotta-500 text-white font-bold py-4 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-strong text-xl font-fredoka tracking-wide drop-shadow-soft"
                   >
                     Start Game
                   </button>
@@ -262,12 +288,21 @@ function GameSetup({ onGameStart }) {
 }
 
 // Individual Player Page Component
-function PlayerPage({ players }) {
+function PlayerPage() {
   const { playerId } = useParams()
   const [showRole, setShowRole] = useState(true)
   const [autoHideTimer, setAutoHideTimer] = useState(null)
   
+  const { state } = useGame()
+  const { players } = state;
   const player = players.find(p => p.playerId === playerId)
+
+  // Debugging logs
+  console.log("PlayerPage rendered", {
+    playerId,
+    playersInContext: players.length,
+    foundPlayer: player ? player.name : "Not found"
+  });
   
   useEffect(() => {
     if (player) {
@@ -289,12 +324,24 @@ function PlayerPage({ players }) {
     setShowRole(!showRole)
   }
   
+  if (players.length === 0) {
+    return (
+       <div className="min-h-screen text-[#4a3f3c] flex items-center justify-center">
+        <div className="text-center bg-[#fdfaf6] p-8 rounded-xl shadow-lg">
+          <h1 className="text-2xl font-bold mb-4 font-fredoka">Loading Player...</h1>
+          <p className="text-[#6d4c41]">Please wait while we fetch the game data.</p>
+        </div>
+      </div>
+    )
+  }
+
   if (!player) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 text-white flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Player Not Found</h1>
-          <p className="text-gray-300">This player link is invalid or has expired.</p>
+      <div className="min-h-screen text-[#4a3f3c] flex items-center justify-center">
+        <Navigation showBackToWelcome={true} />
+        <div className="text-center bg-[#fdfaf6] p-8 rounded-xl shadow-lg mt-20">
+          <h1 className="text-2xl font-bold mb-4 font-fredoka">Player Not Found</h1>
+          <p className="text-[#6d4c41]">This player link is invalid, the game session may have ended, or you might need to refresh.</p>
         </div>
       </div>
     )
@@ -331,67 +378,69 @@ function PlayerPage({ players }) {
   }
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 text-white">
-      <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen text-[#4a3f3c]">
+      <Navigation showBackToWelcome={true} />
+      
+      <div className="container mx-auto px-4 py-8 pt-20">
         <div className="max-w-md mx-auto">
-          <div className="bg-gray-800 rounded-lg p-6 shadow-xl text-center">
-            <h1 className="text-3xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
+          <div className="bg-[#fdfaf6] rounded-xl p-8 shadow-strong text-center">
+            <h1 className="text-3xl font-bold mb-6 font-fredoka text-brand-brown-800 drop-shadow-soft">
               {player.name}
             </h1>
             
             <div className="space-y-6">
               {showRole ? (
-                <div className="space-y-4">
-                  <div className="bg-gray-700 rounded-lg p-4">
-                    <h2 className={`text-xl font-bold mb-2 ${getRoleColor(player.role)}`}>
+                <div className="space-y-6">
+                  <div className="bg-[#faf6f2] rounded-lg p-6 border border-[#e0d8d4] shadow-soft">
+                    <h2 className={`text-xl font-bold mb-4 font-fredoka ${getRoleColor(player.role)} drop-shadow-soft`}>
                       {player.role.charAt(0).toUpperCase() + player.role.slice(1)}
                     </h2>
                     <img 
                       src={getRoleImage(player.role)} 
                       alt={player.role}
-                      className="w-48 h-48 mx-auto rounded-lg my-4"
+                      className="w-48 h-48 mx-auto rounded-lg my-4 shadow-medium"
                     />
-                    <p className="text-sm text-gray-300">
+                    <p className="text-sm text-brand-brown-700 font-fredoka leading-relaxed">
                       {getRoleDescription(player.role)}
                     </p>
                   </div>
                   
-                  <div className="bg-gray-700 rounded-lg p-4">
-                    <h3 className="text-sm font-medium text-gray-400 mb-2">Role Commitment</h3>
-                    <p className="text-xs text-gray-300 break-all">
+                  <div className="bg-[#faf6f2] rounded-lg p-4 border border-[#e0d8d4] shadow-soft">
+                    <h3 className="text-sm font-medium text-brand-brown-700 mb-3 font-fredoka">Role Commitment</h3>
+                    <p className="text-xs text-brand-brown-600 break-all font-mono bg-white p-2 rounded border">
                       {player.commitment}
                     </p>
                   </div>
                   
                   <button
                     onClick={handleToggleRole}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
+                    className="w-full bg-gradient-to-r from-brand-terracotta-500 to-brand-terracotta-400 hover:from-brand-terracotta-600 hover:to-brand-terracotta-500 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 font-fredoka tracking-wide shadow-soft hover:shadow-medium"
                   >
                     Hide Role
                   </button>
                 </div>
               ) : (
-                <div className="space-y-4">
-                  <div className="bg-gray-700 rounded-lg p-4">
-                    <h2 className="text-xl font-bold mb-2 text-gray-400">
+                <div className="space-y-6">
+                  <div className="bg-[#faf6f2] rounded-lg p-6 border border-[#e0d8d4] shadow-soft">
+                    <h2 className="text-xl font-bold mb-4 text-gray-500 font-fredoka drop-shadow-soft">
                       Role Hidden
                     </h2>
-                    <p className="text-sm text-gray-300">
+                    <p className="text-sm text-brand-brown-700 font-fredoka leading-relaxed">
                       Your role is currently hidden. Click below to reveal it again.
                     </p>
                   </div>
                   
                   <button
                     onClick={handleToggleRole}
-                    className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
+                    className="w-full bg-gradient-to-r from-brand-terracotta-500 to-brand-terracotta-400 hover:from-brand-terracotta-600 hover:to-brand-terracotta-500 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 font-fredoka tracking-wide shadow-soft hover:shadow-medium"
                   >
                     Show Role
                   </button>
                 </div>
               )}
               
-              <div className="text-xs text-gray-400 mt-6">
-                <p>Player ID: {player.playerId}</p>
+              <div className="text-xs text-brand-brown-600 mt-8 font-fredoka bg-brand-brown-50 p-4 rounded-lg border border-brand-brown-200">
+                <p className="mb-2">Player ID: {player.playerId}</p>
                 <p>Share this link with {player.name}</p>
               </div>
             </div>
@@ -403,10 +452,12 @@ function PlayerPage({ players }) {
 }
 
 // Moderator View Component
-function ModeratorView({ players, onPhaseChange }) {
+function ModeratorView() {
   const [currentPhase, setCurrentPhase] = useState(PHASES.NIGHT)
   const [phaseStep, setPhaseStep] = useState(0)
   const [zkProof, setZkProof] = useState(null)
+  
+  const { players } = useGame()
   
   const phaseSteps = {
     [PHASES.NIGHT]: [
@@ -435,7 +486,6 @@ function ModeratorView({ players, onPhaseChange }) {
       setCurrentPhase(PHASES.NIGHT)
       setPhaseStep(0)
     }
-    onPhaseChange && onPhaseChange(currentPhase === PHASES.NIGHT ? PHASES.DAY : PHASES.NIGHT)
   }
   
   const handleNextStep = () => {
@@ -461,32 +511,34 @@ function ModeratorView({ players, onPhaseChange }) {
   }
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 text-white">
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-4xl font-bold text-center mb-8 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
+    <div className="min-h-screen text-[#4a3f3c]">
+      <Navigation showBackToWelcome={true} />
+      
+      <div className="container mx-auto px-4 py-8 pt-20">
+        <h1 className="text-4xl font-fredoka font-bold text-white text-shadow-lg text-center mb-8 drop-shadow-soft">
           Moderator View
         </h1>
         
-        <div className="max-w-6xl mx-auto space-y-6">
+        <div className="max-w-6xl mx-auto space-y-8">
           {/* Game Phase Control */}
-          <div className="bg-gray-800 rounded-lg p-6 shadow-xl">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-semibold">Game Phase: {currentPhase.toUpperCase()}</h2>
+          <div className="bg-[#fdfaf6] rounded-xl p-8 shadow-strong">
+            <div className="flex flex-wrap justify-between items-center mb-6 gap-4">
+              <h2 className="text-2xl font-semibold font-fredoka text-brand-brown-800 drop-shadow-soft">Game Phase: {currentPhase.toUpperCase()}</h2>
               <button
                 onClick={handlePhaseChange}
-                className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg transition-colors"
+                className="bg-gradient-to-r from-brand-terracotta-500 to-brand-terracotta-400 hover:from-brand-terracotta-600 hover:to-brand-terracotta-500 text-white font-fredoka font-bold px-6 py-3 rounded-lg transition-all duration-300 shadow-soft hover:shadow-medium tracking-wide"
               >
                 Switch to {currentPhase === PHASES.NIGHT ? 'DAY' : 'NIGHT'}
               </button>
             </div>
             
-            <div className="bg-gray-700 rounded-lg p-4 mb-4">
-              <h3 className="text-lg font-medium mb-2">Current Step:</h3>
-              <p className="text-gray-300 mb-4">{phaseSteps[currentPhase][phaseStep]}</p>
+            <div className="bg-[#faf6f2] rounded-lg p-6 mb-6 border border-[#e0d8d4] shadow-soft">
+              <h3 className="text-lg font-medium mb-4 font-fredoka text-brand-brown-700">Current Step:</h3>
+              <p className="text-brand-brown-700 mb-6 font-fredoka leading-relaxed">{phaseSteps[currentPhase][phaseStep]}</p>
               <button
                 onClick={handleNextStep}
                 disabled={phaseStep >= phaseSteps[currentPhase].length - 1}
-                className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed px-4 py-2 rounded-lg transition-colors"
+                className="bg-gradient-to-r from-brand-terracotta-500 to-brand-terracotta-400 hover:from-brand-terracotta-600 hover:to-brand-terracotta-500 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-fredoka font-bold px-6 py-3 rounded-lg transition-all duration-300 shadow-soft hover:shadow-medium tracking-wide"
               >
                 Next Step
               </button>
@@ -494,19 +546,19 @@ function ModeratorView({ players, onPhaseChange }) {
           </div>
           
           {/* Player List */}
-          <div className="bg-gray-800 rounded-lg p-6 shadow-xl">
-            <h2 className="text-2xl font-semibold mb-4">All Players & Roles</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="bg-[#fdfaf6] rounded-xl p-8 shadow-strong">
+            <h2 className="text-2xl font-semibold mb-6 font-fredoka text-brand-brown-800 drop-shadow-soft">All Players & Roles</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {players.map((player) => (
-                <div key={player.id} className="bg-gray-700 rounded-lg p-4">
-                  <h3 className="font-semibold text-lg">{player.name}</h3>
-                  <p className={`text-sm font-medium ${getRoleColor(player.role)}`}>
+                <div key={player.id} className="bg-[#faf6f2] rounded-lg p-6 border border-[#e0d8d4] shadow-soft">
+                  <h3 className="font-semibold text-lg font-fredoka text-brand-brown-800 mb-2">{player.name}</h3>
+                  <p className={`text-sm font-medium ${getRoleColor(player.role)} font-fredoka mb-3`}>
                     {player.role.charAt(0).toUpperCase() + player.role.slice(1)}
                   </p>
-                  <p className="text-xs text-gray-400 mt-2 break-all">
+                  <p className="text-xs text-brand-brown-600 mt-3 break-all font-mono bg-white p-2 rounded border">
                     ID: {player.playerId}
                   </p>
-                  <p className="text-xs text-gray-400 break-all">
+                  <p className="text-xs text-brand-brown-600 break-all font-mono bg-white p-2 rounded border mt-2">
                     Commitment: {player.commitment.substring(0, 16)}...
                   </p>
                 </div>
@@ -515,39 +567,39 @@ function ModeratorView({ players, onPhaseChange }) {
           </div>
           
           {/* ZK Proof Section */}
-          <div className="bg-gray-800 rounded-lg p-6 shadow-xl">
-            <h2 className="text-2xl font-semibold mb-4">Zero-Knowledge Proof</h2>
+          <div className="bg-[#fdfaf6] rounded-xl p-8 shadow-strong">
+            <h2 className="text-2xl font-semibold mb-6 font-fredoka text-brand-brown-800 drop-shadow-soft">Zero-Knowledge Proof</h2>
             <button
               onClick={handleGenerateZKProof}
-              className="bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white font-bold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105"
+              className="bg-gradient-to-r from-brand-terracotta-500 to-brand-terracotta-400 hover:from-brand-terracotta-600 hover:to-brand-terracotta-500 text-white font-bold py-4 px-8 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-strong text-xl font-fredoka tracking-wide drop-shadow-soft"
             >
               Generate ZK Proof
             </button>
             
             {zkProof && (
-              <div className="mt-6 bg-gray-700 rounded-lg p-4">
-                <h3 className="text-lg font-semibold mb-2">
+              <div className="mt-8 bg-[#faf6f2] rounded-lg p-6 border border-[#e0d8d4] shadow-soft">
+                <h3 className="text-lg font-semibold mb-4 font-fredoka text-brand-brown-800">
                   {zkProof.success ? '✅ Proof Generated' : '❌ Proof Failed'}
                 </h3>
-                <p className="text-gray-300 mb-4">{zkProof.message}</p>
+                <p className="text-brand-brown-700 mb-6 font-fredoka leading-relaxed">{zkProof.message}</p>
                 
                 {zkProof.success && (
-                  <div className="space-y-3">
+                  <div className="space-y-4 text-left">
                     <div>
-                      <h4 className="font-medium text-purple-400">Public Input:</h4>
-                      <pre className="text-xs bg-gray-800 p-2 rounded overflow-x-auto">
+                      <h4 className="font-medium text-purple-700 font-fredoka mb-2">Public Input:</h4>
+                      <pre className="text-xs bg-white p-3 rounded border overflow-x-auto text-gray-800 shadow-soft">
                         {JSON.stringify(zkProof.proof.publicInput, null, 2)}
                       </pre>
                     </div>
                     <div>
-                      <h4 className="font-medium text-blue-400">Proof:</h4>
-                      <pre className="text-xs bg-gray-800 p-2 rounded overflow-x-auto">
+                      <h4 className="font-medium text-blue-700 font-fredoka mb-2">Proof:</h4>
+                      <pre className="text-xs bg-white p-3 rounded border overflow-x-auto text-gray-800 shadow-soft">
                         {JSON.stringify(zkProof.proof.proof, null, 2)}
                       </pre>
                     </div>
                     <div>
-                      <h4 className="font-medium text-green-400">Verification:</h4>
-                      <pre className="text-xs bg-gray-800 p-2 rounded overflow-x-auto">
+                      <h4 className="font-medium text-green-700 font-fredoka mb-2">Verification:</h4>
+                      <pre className="text-xs bg-white p-3 rounded border overflow-x-auto text-gray-800 shadow-soft">
                         {JSON.stringify(zkProof.proof.verification, null, 2)}
                       </pre>
                     </div>
@@ -564,69 +616,41 @@ function ModeratorView({ players, onPhaseChange }) {
 
 // Main App Component with Routing
 function App() {
-  const [players, setPlayers] = useState([])
-  const [gameStarted, setGameStarted] = useState(false)
-  const [showWelcome, setShowWelcome] = useState(true);
+  const { state, actions } = useGame();
 
-  // Load players from localStorage on initial component mount
-  useEffect(() => {
-    try {
-      const savedPlayers = localStorage.getItem('zkWerewolfPlayers');
-      if (savedPlayers) {
-        setPlayers(JSON.parse(savedPlayers));
-        setGameStarted(true);
-      }
-    } catch (error) {
-      console.error("Failed to parse players from localStorage", error);
-      // If parsing fails, clear the bad data
-      localStorage.removeItem('zkWerewolfPlayers');
-    }
-  }, []);
-  
-  const handleGameStart = (gamePlayers) => {
-    localStorage.setItem('zkWerewolfPlayers', JSON.stringify(gamePlayers));
-    setPlayers(gamePlayers)
-    setGameStarted(true)
-  }
+  // Debug logging
+  console.log('App render - state:', {
+    showWelcome: state.showWelcome,
+    gameStarted: state.gameStarted,
+    playersCount: state.players.length
+  });
 
-  const handleNewGame = () => {
-    localStorage.removeItem('zkWerewolfPlayers');
-    setPlayers([]);
-    setGameStarted(false);
-  }
-
-  const handleStartFromWelcome = () => {
-    setShowWelcome(false);
-  };
-  
   return (
     <Router>
       <Routes>
         <Route 
           path="/" 
           element={
-            showWelcome ? (
-              <WelcomePage onStart={handleStartFromWelcome} />
-            ) : gameStarted ? (
-              <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 text-white">
-                <div className="container mx-auto px-4 py-8">
-                  <h1 className="text-4xl font-bold text-center mb-8 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
-                    zkWerewolf
-                  </h1>
-                  
-                  <div className="max-w-4xl mx-auto space-y-6">
+            state.showWelcome ? (
+              <WelcomePage onStart={() => actions.setWelcome(false)} />
+            ) : state.gameStarted ? (
+              <div className="min-h-screen text-[#4a3f3c]">
+                <Navigation showBackToWelcome={true} />
+                
+                <div className="container mx-auto px-4 py-8 pt-20">
+                  <div className="max-w-4xl mx-auto space-y-8 mt-12">
                     {/* Player Links */}
-                    <div className="bg-gray-800 rounded-lg p-6 shadow-xl">
-                      <h2 className="text-2xl font-semibold mb-4">Player Links</h2>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {players.map((player) => (
-                          <div key={player.id} className="bg-gray-700 rounded-lg p-4">
-                            <h3 className="font-semibold text-lg mb-2">{player.name}</h3>
+                    <div className="bg-[#fdfaf6] rounded-xl p-8 shadow-strong">
+                      <h2 className="text-3xl font-semibold mb-6 font-fredoka text-center text-brand-brown-800 drop-shadow-soft">Player Links</h2>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                        {state.players.map((player) => (
+                          <div key={player.id} className="bg-[#faf6f2] rounded-lg p-6 border border-[#e0d8d4] shadow-soft">
+                            <h3 className="font-semibold text-lg mb-3 font-fredoka text-brand-brown-800">{player.name}</h3>
                             <a
                               href={`/player/${player.playerId}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-blue-400 hover:text-blue-300 text-sm break-all"
+                              className="text-brand-terracotta-600 hover:text-brand-terracotta-700 text-sm break-all font-mono bg-white p-2 rounded border transition-colors"
                             >
                               /player/{player.playerId}
                             </a>
@@ -636,18 +660,18 @@ function App() {
                     </div>
                     
                     {/* Game Controls */}
-                    <div className="flex justify-center space-x-4">
+                    <div className="flex justify-center space-x-6">
                       <a
                         href="/moderator"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+                        className="bg-gradient-to-r from-brand-terracotta-500 to-brand-terracotta-400 hover:from-brand-terracotta-600 hover:to-brand-terracotta-500 text-white font-bold py-4 px-8 rounded-lg transition-all duration-300 shadow-soft hover:shadow-medium font-fredoka tracking-wide"
                       >
                         Open Moderator View
                       </a>
                       <button
-                        onClick={handleNewGame}
-                        className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+                        onClick={actions.newGame}
+                        className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-4 px-8 rounded-lg transition-all duration-300 shadow-soft hover:shadow-medium font-fredoka tracking-wide"
                       >
                         New Game
                       </button>
@@ -656,17 +680,17 @@ function App() {
                 </div>
               </div>
             ) : (
-              <GameSetup onGameStart={handleGameStart} />
+              <GameSetup onGameStart={actions.startGame} />
             )
           } 
         />
         <Route 
           path="/player/:playerId" 
-          element={<PlayerPage players={players} />} 
+          element={<PlayerPage />} 
         />
         <Route 
           path="/moderator" 
-          element={<ModeratorView players={players} />} 
+          element={<ModeratorView />} 
         />
       </Routes>
     </Router>

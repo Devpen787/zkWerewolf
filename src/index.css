@@ -1,3 +1,93 @@
 @tailwind base;
 @tailwind components;
-@tailwind utilities; 
+@tailwind utilities;
+
+body {
+  background-color: #4a3f3c; /* A solid fallback color */
+  background-image: url('./assets/background-pattern.png');
+  background-repeat: repeat;
+  background-size: auto;
+  background-attachment: fixed;
+  font-family: 'Fredoka', sans-serif;
+  line-height: 1.6;
+}
+
+/* Mobile-friendly base styles */
+@media (max-width: 768px) {
+  body {
+    font-size: 16px;
+  }
+  
+  h1 {
+    font-size: 1.75rem;
+  }
+  
+  h2 {
+    font-size: 1.5rem;
+  }
+  
+  h3 {
+    font-size: 1.25rem;
+  }
+  
+  button {
+    min-height: 44px; /* Better touch targets */
+  }
+  
+  input, textarea {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+  
+  /* Improve navigation spacing on mobile */
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  /* Better button spacing on mobile */
+  .space-x-6 > * + * {
+    margin-left: 0.75rem;
+  }
+  
+  /* Improve card padding on mobile */
+  .p-8 {
+    padding: 1.5rem;
+  }
+}
+
+/* Improved focus states for accessibility */
+button:focus,
+input:focus,
+textarea:focus {
+  outline: 2px solid #c05c3c;
+  outline-offset: 2px;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Navigation-specific mobile improvements */
+@media (max-width: 640px) {
+  /* Ensure navigation doesn't interfere with content */
+  .pt-20 {
+    padding-top: 5rem;
+  }
+  
+  /* Better mobile menu styling */
+  .backdrop-blur-sm {
+    backdrop-filter: blur(8px);
+  }
+}
+
+/* Prevent horizontal scroll on mobile */
+@media (max-width: 768px) {
+  body {
+    overflow-x: hidden;
+  }
+  
+  .container {
+    max-width: 100%;
+  }
+} 
