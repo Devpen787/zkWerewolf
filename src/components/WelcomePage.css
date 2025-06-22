@@ -4,6 +4,10 @@
   background-position: center;
   position: relative;
   color: white;
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .hero-section::before {
@@ -13,12 +17,17 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5); /* Dark overlay */
+  background-color: rgba(0, 0, 0, 0.65); /* Increased overlay darkness */
 }
 
 .hero-content {
   position: relative;
   z-index: 1;
+  text-align: center;
+}
+
+.hero-content p {
+  text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.8);
 }
 
 .accordion__button {

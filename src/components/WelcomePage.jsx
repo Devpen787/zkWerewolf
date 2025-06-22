@@ -13,7 +13,7 @@ const WelcomePage = ({ onStart }) => {
   return (
     <div className="bg-gray-900 min-h-screen text-white">
       {/* Hero Section */}
-      <div className="hero-section text-center py-20 px-4">
+      <div className="hero-section px-4">
         <div className="hero-content">
           <h1 className="text-5xl md:text-7xl font-extrabold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
             zkWerewolf
