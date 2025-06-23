@@ -20,7 +20,7 @@ const InvitePlayers = () => {
       return;
     }
 
-    const baseUrl = 'https://zk-werewolf.vercel.app';
+    const baseUrl = window.location.origin;
     let message = "Join our zkWerewolf game 🐺\n\n";
     message += "Only click on *your* name — don't peek at others 😉\n\n";
 
