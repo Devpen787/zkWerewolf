@@ -301,39 +301,46 @@ function PlayerPage() {
   const [showRole, setShowRole] = useState(false)
 
   useEffect(() => {
-    const searchParams = new URLSearchParams(location.search);
-    const gameData = searchParams.get('game');
-
-    let playersList = state.players;
-
-    // If players aren't in context, try to load them from the URL
-    if (playersList.length === 0 && gameData) {
-      try {
-        const decodedPlayers = JSON.parse(decodeURIComponent(gameData));
-        actions.setPlayers(decodedPlayers);
-        playersList = decodedPlayers; // Use the decoded list immediately
-        console.log("Loaded players from URL in PlayerPage!", decodedPlayers);
-      } catch (e) {
-        console.error("Failed to parse game data from URL", e);
-        setError("Could not load game data from the link. The data might be corrupted.");
-        setIsLoading(false);
-        return;
+    // This effect's job is to ensure the player list is loaded, either from
+    // the context or from the URL. It will trigger a re-render when the
+    // players list is ready.
+    if (state.players.length === 0) {
+      const searchParams = new URLSearchParams(location.search);
+      const gameData = searchParams.get('game');
+      if (gameData) {
+        try {
+          const decodedPlayers = JSON.parse(decodeURIComponent(gameData));
+          actions.setPlayers(decodedPlayers);
+        } catch (e) {
+          console.error("Failed to parse game data from URL", e);
+          setError("Could not load game data. The link may be corrupted.");
+          setIsLoading(false);
+        }
       }
-    } else if (playersList.length === 0) {
-       setError("This player link is invalid, the game session may have ended, or you might need to refresh.");
-       setIsLoading(false);
-       return;
     }
+  }, [location.search, state.players.length, actions]);
 
-    const foundPlayer = playersList.find(p => p.playerId === playerId)
-    
-    if (foundPlayer) {
-      setPlayer(foundPlayer);
+  useEffect(() => {
+    // This effect runs whenever the players list changes. Its only job
+    // is to find the current player from that list.
+    if (state.players.length > 0) {
+      const foundPlayer = state.players.find(p => p.playerId === playerId);
+      if (foundPlayer) {
+        setPlayer(foundPlayer);
+      } else {
+        setError("Player ID not found in this game session.");
+      }
+      setIsLoading(false);
     } else {
-      setError("This player link is invalid, the game session may have ended, or you might need to refresh.");
+      // If there are no players after attempting to load, set loading to false.
+      // The first effect will handle setting an error if the URL was bad.
+      const gameData = new URLSearchParams(location.search).get('game');
+      if (!gameData) {
+         setError("This player link is invalid or the game session has expired.");
+         setIsLoading(false);
+      }
     }
-    setIsLoading(false);
-  }, [playerId, location.search, state.players, actions]);
+  }, [playerId, state.players]);
 
   useEffect(() => {
     // This effect runs when the player object is successfully found or changed.
