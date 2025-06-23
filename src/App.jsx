@@ -6,6 +6,7 @@ import { Toaster, toast } from 'react-hot-toast'
 import WelcomePage from './components/WelcomePage';
 import Navigation from './components/Navigation';
 import InvitePlayers from './components/InvitePlayers';
+import PlayerLinksPage from './components/PlayerLinksPage';
 import { useGame } from './context/GameContext';
 
 // Import role images
@@ -144,7 +145,7 @@ const proveWerewolfPresence = (commitments, players) => {
 
 // Game Setup Component
 function GameSetup({ onGameStart }) {
-  const [playerCount, setPlayerCount] = useState(8)
+  const [playerCount, setPlayerCount] = useState(4)
   const [players, setPlayers] = useState([])
   const [playerNames, setPlayerNames] = useState([])
   const [currentPhase, setCurrentPhase] = useState('count') // 'count' or 'names'
@@ -308,7 +309,7 @@ function PlayerPage() {
     // If players aren't in context, try to load them from the URL
     if (playersList.length === 0 && gameData) {
       try {
-        const decodedPlayers = JSON.parse(atob(gameData));
+        const decodedPlayers = JSON.parse(decodeURIComponent(gameData));
         actions.setPlayers(decodedPlayers);
         playersList = decodedPlayers; // Use the decoded list immediately
         console.log("Loaded players from URL in PlayerPage!", decodedPlayers);
@@ -335,22 +336,19 @@ function PlayerPage() {
   }, [playerId, location.search, state.players, actions]);
 
   useEffect(() => {
+    // This effect runs when the player object is successfully found or changed.
     if (player) {
-      // Auto-hide role after 10 seconds
+      // Set a timer to automatically hide the role, for example, after 10 seconds
       const timer = setTimeout(() => {
-        setShowRole(false)
-      }, 10000)
-      setAutoHideTimer(timer)
-      
-      return () => clearTimeout(timer)
+        setShowRole(false);
+      }, 10000); // 10 seconds
+
+      // Cleanup function to clear the timer if the component unmounts or player changes
+      return () => clearTimeout(timer);
     }
-  }, [player])
+  }, [player]);
   
   const handleToggleRole = () => {
-    if (autoHideTimer) {
-      clearTimeout(autoHideTimer)
-      setAutoHideTimer(null)
-    }
     setShowRole(!showRole)
   }
   
@@ -487,7 +485,6 @@ function ModeratorView() {
   const { players } = state
   const [currentPhase, setCurrentPhase] = useState(PHASES.NIGHT)
   const [step, setStep] = useState(0) // For multi-step phases
-  const [zkProof, setZkProof] = useState(null)
   const [isLoading, setIsLoading] = useState(true);
 
   const location = useLocation();
@@ -502,7 +499,7 @@ function ModeratorView() {
 
       if (gameData) {
         try {
-          const decodedPlayers = JSON.parse(atob(gameData));
+          const decodedPlayers = JSON.parse(decodeURIComponent(gameData));
           actions.setPlayers(decodedPlayers);
           console.log("Loaded players from URL in ModeratorView!", decodedPlayers);
         } catch (e) {
@@ -556,9 +553,18 @@ function ModeratorView() {
   }
   
   const handleGenerateZKProof = () => {
+    if (state.zkProof) {
+      toast('Proof has already been generated.', { icon: 'ℹ️' });
+      return;
+    }
     const commitments = players.map(p => p.commitment)
-    const proof = proveWerewolfPresence(commitments, players)
-    setZkProof(proof)
+    const result = proveWerewolfPresence(commitments, players)
+    if (result.success) {
+      actions.setZkProof(result)
+      toast.success(result.message)
+    } else {
+      toast.error(result.message)
+    }
   }
   
   if (isLoading) {
@@ -644,44 +650,22 @@ function ModeratorView() {
           {/* ZK Proof Section */}
           <div className="bg-[#fdfaf6] rounded-xl p-8 shadow-strong">
             <h2 className="text-2xl font-semibold mb-6 font-fredoka text-brand-brown-800 drop-shadow-soft">Zero-Knowledge Proof</h2>
-            <button
-              onClick={handleGenerateZKProof}
-              className="bg-gradient-to-r from-brand-terracotta-500 to-brand-terracotta-400 hover:from-brand-terracotta-600 hover:to-brand-terracotta-500 text-white font-bold py-4 px-8 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-strong text-xl font-fredoka tracking-wide drop-shadow-soft"
-            >
-              Generate ZK Proof
-            </button>
-            
-            {zkProof && (
-              <div className="mt-8 bg-[#faf6f2] rounded-lg p-6 border border-[#e0d8d4] shadow-soft">
-                <h3 className="text-lg font-semibold mb-4 font-fredoka text-brand-brown-800">
-                  {zkProof.success ? '✅ Proof Generated' : '❌ Proof Failed'}
-                </h3>
-                <p className="text-brand-brown-700 mb-6 font-fredoka leading-relaxed">{zkProof.message}</p>
-                
-                {zkProof.success && (
-                  <div className="space-y-4 text-left">
-                    <div>
-                      <h4 className="font-medium text-purple-700 font-fredoka mb-2">Public Input:</h4>
-                      <pre className="text-xs bg-white p-3 rounded border overflow-x-auto text-gray-800 shadow-soft">
-                        {JSON.stringify(zkProof.proof.publicInput, null, 2)}
-                      </pre>
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-blue-700 font-fredoka mb-2">Proof:</h4>
-                      <pre className="text-xs bg-white p-3 rounded border overflow-x-auto text-gray-800 shadow-soft">
-                        {JSON.stringify(zkProof.proof.proof, null, 2)}
-                      </pre>
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-green-700 font-fredoka mb-2">Verification:</h4>
-                      <pre className="text-xs bg-white p-3 rounded border overflow-x-auto text-gray-800 shadow-soft">
-                        {JSON.stringify(zkProof.proof.verification, null, 2)}
-                      </pre>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
+            <div className="bg-[#faf6f2] rounded-lg p-6 border border-[#e0d8d4] shadow-soft">
+               <h3 className="text-xl font-bold mb-4 font-fredoka text-brand-brown-700">ZK Proof of Werewolves</h3>
+               <button
+                onClick={handleGenerateZKProof}
+                disabled={state.zkProof}
+                className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-fredoka font-bold px-6 py-3 rounded-lg transition-all duration-300 shadow-soft hover:shadow-medium tracking-wide"
+              >
+                {state.zkProof ? 'Proof Generated!' : 'Generate ZK Proof'}
+              </button>
+              {state.zkProof && (
+                <div className="mt-4 text-xs text-green-800 bg-green-50 p-3 rounded-md border border-green-200">
+                  <p className="font-bold">{state.zkProof.message}</p>
+                  <p className="break-all mt-2 font-mono">Root: {state.zkProof.proof.publicInput.commitmentRoot}</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -710,36 +694,23 @@ function App() {
 }
 
 function MainApp() {
-  const { state, actions } = useGame()
+  const { actions } = useGame()
   const navigate = useNavigate()
-
-  useEffect(() => {
-    // This effect will react to changes in the uiState and navigate
-    switch (state.uiState) {
-      case 'welcome':
-        navigate('/');
-        break;
-      case 'setup':
-        navigate('/setup');
-        break;
-      case 'game':
-        // The moderator link is static, but we could add player-specific routing here too
-        navigate('/moderator');
-        break;
-      default:
-        navigate('/');
-    }
-  }, [state.uiState, navigate]);
 
   const handleGameStart = (players) => {
     actions.setPlayers(players);
-    actions.setUiState('game'); // Move to game view
+    navigate('/links');
   };
 
-   return (
+  const handleStartSetup = () => {
+    navigate('/setup');
+  }
+
+  return (
     <Routes>
-      <Route path="/" element={<WelcomePage onStart={() => actions.setUiState('setup')} />} />
+      <Route path="/" element={<WelcomePage onStart={handleStartSetup} />} />
       <Route path="/setup" element={<GameSetup onGameStart={handleGameStart} />} />
+      <Route path="/links" element={<PlayerLinksPage />} />
       <Route path="/player/:playerId" element={<PlayerPage />} />
       <Route path="/moderator" element={<ModeratorView />} />
     </Routes>

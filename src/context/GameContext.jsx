@@ -3,10 +3,6 @@ import React, { createContext, useContext, useReducer, useEffect } from 'react';
 // Initial state
 const initialState = {
   players: [],
-  uiState: 'welcome', // 'welcome', 'setup', 'game'
-  gameStarted: false,
-  showWelcome: true,
-  currentPhase: 'setup', // 'setup', 'playing', 'ended'
   gamePhase: 'night', // 'night', 'day'
   phaseStep: 0,
   zkProof: null
@@ -15,12 +11,7 @@ const initialState = {
 // Action types
 const ACTIONS = {
   SET_PLAYERS: 'SET_PLAYERS',
-  SET_UI_STATE: 'SET_UI_STATE',
-  START_GAME: 'START_GAME',
   NEW_GAME: 'NEW_GAME',
-  BACK_TO_WELCOME: 'BACK_TO_WELCOME',
-  SET_WELCOME: 'SET_WELCOME',
-  SET_PHASE: 'SET_PHASE',
   SET_GAME_PHASE: 'SET_GAME_PHASE',
   SET_PHASE_STEP: 'SET_PHASE_STEP',
   SET_ZK_PROOF: 'SET_ZK_PROOF',
@@ -36,37 +27,9 @@ const gameReducer = (state, action) => {
         players: action.payload
       };
     
-    case ACTIONS.SET_UI_STATE:
-      return {
-        ...state,
-        uiState: action.payload
-      };
-    
-    case ACTIONS.START_GAME:
-      return {
-        ...state,
-        players: action.payload,
-        gameStarted: true,
-        showWelcome: false,
-        currentPhase: 'playing'
-      };
-    
     case ACTIONS.NEW_GAME:
       return {
         ...initialState,
-        showWelcome: true
-      };
-    
-    case ACTIONS.SET_WELCOME:
-      return {
-        ...state,
-        showWelcome: action.payload
-      };
-    
-    case ACTIONS.SET_PHASE:
-      return {
-        ...state,
-        currentPhase: action.payload
       };
     
     case ACTIONS.SET_GAME_PHASE:
@@ -91,14 +54,6 @@ const gameReducer = (state, action) => {
       return {
         ...state,
         ...action.payload
-      };
-    
-    case ACTIONS.BACK_TO_WELCOME:
-      return {
-        ...state,
-        showWelcome: true,
-        gameStarted: false,
-        currentPhase: 'setup'
       };
     
     default:
@@ -127,8 +82,6 @@ export const GameProvider = ({ children }) => {
           type: ACTIONS.LOAD_FROM_STORAGE,
           payload: {
             players,
-            gameStarted: true,
-            showWelcome: false,
             ...gameState
           }
         });
@@ -145,30 +98,24 @@ export const GameProvider = ({ children }) => {
     if (state.players.length > 0) {
       localStorage.setItem('zkWerewolfPlayers', JSON.stringify(state.players));
       localStorage.setItem('zkWerewolfGameState', JSON.stringify({
-        currentPhase: state.currentPhase,
         gamePhase: state.gamePhase,
         phaseStep: state.phaseStep,
         zkProof: state.zkProof
       }));
     }
-  }, [state.players, state.currentPhase, state.gamePhase, state.phaseStep, state.zkProof]);
+  }, [state.players, state.gamePhase, state.phaseStep, state.zkProof]);
 
   // Actions
   const actions = {
     setPlayers: (players) => dispatch({ type: ACTIONS.SET_PLAYERS, payload: players }),
-    setUiState: (uiState) => dispatch({ type: ACTIONS.SET_UI_STATE, payload: uiState }),
-    startGame: (players) => dispatch({ type: ACTIONS.START_GAME, payload: players }),
     newGame: () => {
       localStorage.removeItem('zkWerewolfPlayers');
       localStorage.removeItem('zkWerewolfGameState');
       dispatch({ type: ACTIONS.NEW_GAME });
     },
-    setWelcome: (show) => dispatch({ type: ACTIONS.SET_WELCOME, payload: show }),
-    setPhase: (phase) => dispatch({ type: ACTIONS.SET_PHASE, payload: phase }),
     setGamePhase: (phase) => dispatch({ type: ACTIONS.SET_GAME_PHASE, payload: phase }),
     setPhaseStep: (step) => dispatch({ type: ACTIONS.SET_PHASE_STEP, payload: step }),
     setZkProof: (proof) => dispatch({ type: ACTIONS.SET_ZK_PROOF, payload: proof }),
-    backToWelcome: () => dispatch({ type: ACTIONS.BACK_TO_WELCOME })
   };
 
   return (
