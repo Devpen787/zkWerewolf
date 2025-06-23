@@ -1,39 +1,42 @@
-import React, { useState, useMemo } from 'react';
+import React from 'react';
 import { useGame } from '../context/GameContext';
 import { toast } from 'react-hot-toast';
-import LZString from 'lz-string';
 
-const InvitePlayers = () => {
-  const [inviteMessage, setInviteMessage] = useState('');
+const InvitePlayers = ({ encodedGameData }) => {
   const { state } = useGame();
 
-  const encodedGameData = useMemo(() => {
-    if (state.players.length === 0) return '';
-    const json = JSON.stringify(state.players);
-    const compressed = LZString.compressToBase64(json);
-    return encodeURIComponent(compressed);
-  }, [state.players]);
+  const getInviteMessage = () => {
+    const inviteUrl = `${window.location.origin}/invite?game=${encodedGameData}`;
+    return `You're invited to a game of zkWerewolf!\n\nUse this link to join the game and see your role:\n${inviteUrl}`;
+  };
 
-  const generateAndCopyMessage = () => {
+  const copyInvite = () => {
     if (state.players.length === 0) {
       toast.error("No players to invite!");
       return;
     }
-
-    const baseUrl = window.location.origin;
-    let message = "Join our zkWerewolf game 🐺\n\n";
-    message += "Only click on *your* name — don't peek at others 😉\n\n";
-
-    const playerLinks = state.players.map(player => {
-      const playerUrl = `${baseUrl}/player/${player.playerId}?game=${encodedGameData}`;
-      return `${player.name}:\n${playerUrl}`;
-    }).join('\n\n');
-
-    const finalMessage = `${message}${playerLinks}`;
-    
-    setInviteMessage(finalMessage);
-    navigator.clipboard.writeText(finalMessage);
+    navigator.clipboard.writeText(getInviteMessage());
     toast.success("Invite message copied to clipboard!");
+  };
+
+  const shareToWhatsApp = () => {
+    if (state.players.length === 0) {
+      toast.error("No players to invite!");
+      return;
+    }
+    const message = encodeURIComponent(getInviteMessage());
+    window.open(`https://wa.me/?text=${message}`, '_blank');
+  };
+
+  const shareToTelegram = () => {
+    if (state.players.length === 0) {
+      toast.error("No players to invite!");
+      return;
+    }
+    const inviteUrl = `${window.location.origin}/invite?game=${encodedGameData}`;
+    const text = `You're invited to a game of zkWerewolf!`;
+    const url = `https://t.me/share/url?url=${encodeURIComponent(inviteUrl)}&text=${encodeURIComponent(text)}`;
+    window.open(url, '_blank');
   };
 
   return (
@@ -42,17 +45,30 @@ const InvitePlayers = () => {
         💌 Invite Players
       </h2>
       <p className="text-center text-brand-brown-700 mb-6">
-        Click the button to generate and copy a message with links for all players.
+        Share the game link with all players.
       </p>
       
       <div className="space-y-4">
-        <pre className="text-xs whitespace-pre-wrap bg-brand-brown-50 p-4 rounded-lg border border-brand-brown-200 text-brand-brown-800 shadow-inner min-h-[100px] overflow-auto">{inviteMessage || "Click below to generate the invite message."}</pre>
-        <button
-          onClick={generateAndCopyMessage}
-          className="w-full bg-gradient-to-r from-brand-terracotta-500 to-brand-terracotta-400 hover:from-brand-terracotta-600 hover:to-brand-terracotta-500 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-strong text-lg font-fredoka tracking-wide drop-shadow-soft"
-        >
-          Generate & Copy Invite
-        </button>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <button
+            onClick={copyInvite}
+            className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-4 rounded-lg transition-all duration-200 shadow-soft font-fredoka flex items-center justify-center"
+          >
+            📋 Copy Invite
+          </button>
+          <button
+            onClick={shareToWhatsApp}
+            className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg transition-all duration-200 shadow-soft font-fredoka flex items-center justify-center"
+          >
+            💬 WhatsApp
+          </button>
+          <button
+            onClick={shareToTelegram}
+            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg transition-all duration-200 shadow-soft font-fredoka flex items-center justify-center"
+          >
+            ✈️ Telegram
+          </button>
+        </div>
       </div>
     </div>
   );

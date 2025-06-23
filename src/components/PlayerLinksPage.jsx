@@ -1,13 +1,33 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useGame } from '../context/GameContext';
-import InvitePlayers from './InvitePlayers';
 import Navigation from './Navigation';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import LZString from 'lz-string';
+import InvitePlayers from './InvitePlayers';
+import { toast } from 'react-hot-toast';
 
 const PlayerLinksPage = () => {
   const { state, actions } = useGame();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const gameData = params.get('game');
+    if (gameData && state.players.length === 0) {
+      try {
+        const decompressed = LZString.decompressFromBase64(decodeURIComponent(gameData));
+        const players = JSON.parse(decompressed);
+        if (players && Array.isArray(players)) {
+          actions.setPlayers(players);
+        }
+      } catch (e) {
+        console.error("Failed to parse game data from URL", e);
+        toast.error("Invalid game link.");
+        navigate('/');
+      }
+    }
+  }, [location, actions, navigate, state.players.length]);
 
   const encodedGameData = useMemo(() => {
     if (state.players.length === 0) return '';
@@ -33,6 +53,9 @@ const PlayerLinksPage = () => {
       
       <div className="container mx-auto px-4 py-8 pt-20">
         <div className="max-w-4xl mx-auto space-y-8 mt-12">
+          
+          <InvitePlayers encodedGameData={encodedGameData} />
+
           {/* Player Links */}
           <div className="bg-[#fdfaf6] rounded-xl p-8 shadow-strong">
             <h2 className="text-3xl font-semibold mb-6 font-fredoka text-center text-brand-brown-800 drop-shadow-soft">Player Links</h2>
@@ -41,27 +64,26 @@ const PlayerLinksPage = () => {
                 const playerUrl = `${window.location.origin}/player/${player.playerId}?game=${encodedGameData}`;
                 
                 return (
-                  <div key={player.id} className="bg-[#faf6f2] rounded-lg p-6 border border-[#e0d8d4] shadow-soft">
+                  <div key={player.playerId} className="bg-[#faf6f2] rounded-lg p-4 border border-[#e0d8d4] shadow-soft flex flex-col justify-between">
                     <h3 className="font-semibold text-lg mb-3 font-fredoka text-brand-brown-800">{player.name}</h3>
-                    <a
-                      href={playerUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-brand-terracotta-600 hover:text-brand-terracotta-700 text-sm break-all font-mono bg-white p-2 rounded border transition-colors"
-                    >
-                      {`/player/${player.playerId}`}
-                    </a>
+                    <div className="flex items-center space-x-3">
+                       <a
+                        href={playerUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-brand-terracotta-600 hover:text-brand-terracotta-700 text-sm break-all font-mono bg-white p-2 rounded border transition-colors flex-grow"
+                      >
+                        {`/player/${player.playerId.substring(0, 12)}...`}
+                      </a>
+                    </div>
                   </div>
                 );
               })}
             </div>
           </div>
           
-          {/* Invite Players Section */}
-          <InvitePlayers shortLinks={true} />
-
           {/* Game Controls */}
-          <div className="flex flex-col md:flex-row justify-center items-center space-y-4 md:space-y-0 md:space-x-6">
+          <div className="flex flex-col md:flex-row justify-center items-center space-y-4 md:space-y-0 md:space-x-6 mt-8">
             <button
               onClick={handleOpenModeratorView}
               className="w-full md:w-auto bg-gradient-to-r from-brand-terracotta-500 to-brand-terracotta-400 hover:from-brand-terracotta-600 hover:to-brand-terracotta-500 text-white font-bold py-4 px-8 rounded-lg transition-all duration-300 shadow-soft hover:shadow-medium font-fredoka tracking-wide"
