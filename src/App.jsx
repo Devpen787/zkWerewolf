@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react'
-import { BrowserRouter as Router, Routes, Route, useNavigate, useParams } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, useNavigate, useParams, useLocation } from 'react-router-dom'
 import CryptoJS from 'crypto-js'
+import { Toaster, toast } from 'react-hot-toast'
 
 import WelcomePage from './components/WelcomePage';
 import Navigation from './components/Navigation';
+import InvitePlayers from './components/InvitePlayers';
 import { useGame } from './context/GameContext';
 
 // Import role images
@@ -293,9 +295,34 @@ function PlayerPage() {
   const [showRole, setShowRole] = useState(true)
   const [autoHideTimer, setAutoHideTimer] = useState(null)
   
-  const { state } = useGame()
+  const { state, actions } = useGame()
   const { players } = state;
-  const player = players.find(p => p.playerId === playerId)
+  let player = players.find(p => p.playerId === playerId)
+
+  const location = useLocation();
+
+  useEffect(() => {
+    // If players aren't in context, try to load them from the URL
+    if (players.length === 0) {
+      const searchParams = new URLSearchParams(location.search);
+      const gameData = searchParams.get('game');
+
+      if (gameData) {
+        try {
+          const decodedPlayers = JSON.parse(atob(gameData));
+          actions.setPlayers(decodedPlayers);
+          console.log("Loaded players from URL!", decodedPlayers);
+        } catch (e) {
+          console.error("Failed to parse game data from URL", e);
+        }
+      }
+    }
+  }, [players, location.search, actions]);
+  
+  // Refind player in case they were loaded from URL
+  if (!player && players.length > 0) {
+    player = players.find(p => p.playerId === playerId)
+  }
 
   // Debugging logs
   console.log("PlayerPage rendered", {
@@ -457,7 +484,33 @@ function ModeratorView() {
   const [phaseStep, setPhaseStep] = useState(0)
   const [zkProof, setZkProof] = useState(null)
   
-  const { players } = useGame()
+  const { state, actions } = useGame()
+  const { players } = state;
+
+  const location = useLocation();
+
+  useEffect(() => {
+    // If players aren't in context, try to load them from the URL
+    if (players.length === 0) {
+      const searchParams = new URLSearchParams(location.search);
+      const gameData = searchParams.get('game');
+
+      if (gameData) {
+        try {
+          const decodedPlayers = JSON.parse(atob(gameData));
+          actions.setPlayers(decodedPlayers);
+          console.log("Loaded players from URL in ModeratorView!", decodedPlayers);
+        } catch (e) {
+          console.error("Failed to parse game data from URL", e);
+        }
+      }
+    }
+  }, [players, location.search, actions]);
+
+  // Debugging logs
+  console.log("ModeratorView rendered", {
+    playersInContext: players.length,
+  });
   
   const phaseSteps = {
     [PHASES.NIGHT]: [
@@ -498,6 +551,17 @@ function ModeratorView() {
     const commitments = players.map(p => p.commitment)
     const proof = proveWerewolfPresence(commitments, players)
     setZkProof(proof)
+  }
+  
+  if (players.length === 0) {
+    return (
+       <div className="min-h-screen text-[#4a3f3c] flex items-center justify-center">
+        <div className="text-center bg-[#fdfaf6] p-8 rounded-xl shadow-lg">
+          <h1 className="text-2xl font-bold mb-4 font-fredoka">Loading Moderator View...</h1>
+          <p className="text-[#6d4c41]">Please wait while we fetch the game data.</p>
+        </div>
+      </div>
+    )
   }
   
   const getRoleColor = (role) => {
@@ -566,6 +630,9 @@ function ModeratorView() {
             </div>
           </div>
           
+          {/* Invite Players Section */}
+          <InvitePlayers />
+
           {/* ZK Proof Section */}
           <div className="bg-[#fdfaf6] rounded-xl p-8 shadow-strong">
             <h2 className="text-2xl font-semibold mb-6 font-fredoka text-brand-brown-800 drop-shadow-soft">Zero-Knowledge Proof</h2>
@@ -627,6 +694,15 @@ function App() {
 
   return (
     <Router>
+      <Toaster 
+        position="bottom-center"
+        toastOptions={{
+          style: {
+            background: '#4B2E2E',
+            color: '#fdfaf6',
+          },
+        }}
+      />
       <Routes>
         <Route 
           path="/" 
@@ -659,6 +735,9 @@ function App() {
                       </div>
                     </div>
                     
+                    {/* Invite Players Section */}
+                    <InvitePlayers />
+
                     {/* Game Controls */}
                     <div className="flex justify-center space-x-6">
                       <a
