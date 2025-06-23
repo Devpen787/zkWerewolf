@@ -691,106 +691,59 @@ function ModeratorView() {
 
 // Main App Component with Routing
 function App() {
-  // Global state management
-  const [zkProof, setZkProof] = useState(null)
-  
-  const { state } = useGame()
-  const { players } = state;
-
-  // Debugging logs
-  useEffect(() => {
-    console.log('Global players state updated:', players)
-  }, [players])
-  
-  // Debug logging
-  console.log('App render - state:', {
-    showWelcome: state.showWelcome,
-    gameStarted: state.gameStarted,
-    playersCount: state.players.length
-  });
-
   return (
     <Router>
       <Toaster 
-        position="bottom-center"
+        position="top-center"
         toastOptions={{
+          duration: 3000,
           style: {
-            background: '#4B2E2E',
-            color: '#fdfaf6',
+            background: '#363636',
+            color: '#fff',
           },
         }}
       />
-      <Routes>
-        <Route 
-          path="/" 
-          element={
-            state.showWelcome ? (
-              <WelcomePage onStart={() => actions.setWelcome(false)} />
-            ) : state.gameStarted ? (
-              <div className="min-h-screen text-[#4a3f3c]">
-                <Navigation showBackToWelcome={true} />
-                
-                <div className="container mx-auto px-4 py-8 pt-20">
-                  <div className="max-w-4xl mx-auto space-y-8 mt-12">
-                    {/* Player Links */}
-                    <div className="bg-[#fdfaf6] rounded-xl p-8 shadow-strong">
-                      <h2 className="text-3xl font-semibold mb-6 font-fredoka text-center text-brand-brown-800 drop-shadow-soft">Player Links</h2>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-                        {state.players.map((player) => (
-                          <div key={player.id} className="bg-[#faf6f2] rounded-lg p-6 border border-[#e0d8d4] shadow-soft">
-                            <h3 className="font-semibold text-lg mb-3 font-fredoka text-brand-brown-800">{player.name}</h3>
-                            <a
-                              href={`/player/${player.playerId}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-brand-terracotta-600 hover:text-brand-terracotta-700 text-sm break-all font-mono bg-white p-2 rounded border transition-colors"
-                            >
-                              /player/{player.playerId}
-                            </a>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    {/* Invite Players Section */}
-                    <InvitePlayers />
-
-                    {/* Game Controls */}
-                    <div className="flex justify-center space-x-6">
-                      <a
-                        href="/moderator"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="bg-gradient-to-r from-brand-terracotta-500 to-brand-terracotta-400 hover:from-brand-terracotta-600 hover:to-brand-terracotta-500 text-white font-bold py-4 px-8 rounded-lg transition-all duration-300 shadow-soft hover:shadow-medium font-fredoka tracking-wide"
-                      >
-                        Open Moderator View
-                      </a>
-                      <button
-                        onClick={actions.newGame}
-                        className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-4 px-8 rounded-lg transition-all duration-300 shadow-soft hover:shadow-medium font-fredoka tracking-wide"
-                      >
-                        New Game
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <GameSetup onGameStart={actions.startGame} />
-            )
-          } 
-        />
-        <Route 
-          path="/player/:playerId" 
-          element={<PlayerPage />} 
-        />
-        <Route 
-          path="/moderator" 
-          element={<ModeratorView />} 
-        />
-      </Routes>
+      {/* MainApp contains the logic to switch pages based on context */}
+      <MainApp />
     </Router>
   )
+}
+
+function MainApp() {
+  const { state, actions } = useGame()
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    // This effect will react to changes in the uiState and navigate
+    switch (state.uiState) {
+      case 'welcome':
+        navigate('/');
+        break;
+      case 'setup':
+        navigate('/setup');
+        break;
+      case 'game':
+        // The moderator link is static, but we could add player-specific routing here too
+        navigate('/moderator');
+        break;
+      default:
+        navigate('/');
+    }
+  }, [state.uiState, navigate]);
+
+  const handleGameStart = (players) => {
+    actions.setPlayers(players);
+    actions.setUiState('game'); // Move to game view
+  };
+
+   return (
+    <Routes>
+      <Route path="/" element={<WelcomePage onStart={() => actions.setUiState('setup')} />} />
+      <Route path="/setup" element={<GameSetup onGameStart={handleGameStart} />} />
+      <Route path="/player/:playerId" element={<PlayerPage />} />
+      <Route path="/moderator" element={<ModeratorView />} />
+    </Routes>
+  );
 }
 
 export default App 
