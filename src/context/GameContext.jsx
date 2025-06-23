@@ -3,6 +3,7 @@ import React, { createContext, useContext, useReducer, useEffect } from 'react';
 // Initial state
 const initialState = {
   players: [],
+  uiState: 'welcome', // 'welcome', 'setup', 'game'
   gameStarted: false,
   showWelcome: true,
   currentPhase: 'setup', // 'setup', 'playing', 'ended'
@@ -14,6 +15,7 @@ const initialState = {
 // Action types
 const ACTIONS = {
   SET_PLAYERS: 'SET_PLAYERS',
+  SET_UI_STATE: 'SET_UI_STATE',
   START_GAME: 'START_GAME',
   NEW_GAME: 'NEW_GAME',
   BACK_TO_WELCOME: 'BACK_TO_WELCOME',
@@ -32,6 +34,12 @@ const gameReducer = (state, action) => {
       return {
         ...state,
         players: action.payload
+      };
+    
+    case ACTIONS.SET_UI_STATE:
+      return {
+        ...state,
+        uiState: action.payload
       };
     
     case ACTIONS.START_GAME:
@@ -148,6 +156,7 @@ export const GameProvider = ({ children }) => {
   // Actions
   const actions = {
     setPlayers: (players) => dispatch({ type: ACTIONS.SET_PLAYERS, payload: players }),
+    setUiState: (uiState) => dispatch({ type: ACTIONS.SET_UI_STATE, payload: uiState }),
     startGame: (players) => dispatch({ type: ACTIONS.START_GAME, payload: players }),
     newGame: () => {
       localStorage.removeItem('zkWerewolfPlayers');
