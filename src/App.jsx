@@ -310,7 +310,8 @@ function PlayerPage() {
       const gameData = searchParams.get('game');
       if (gameData) {
         try {
-          const decompressed = LZString.decompressFromEncodedURIComponent(gameData);
+          const decodedUri = decodeURIComponent(gameData);
+          const decompressed = LZString.decompressFromBase64(decodedUri);
           const decodedPlayers = JSON.parse(decompressed);
           actions.setPlayers(decodedPlayers);
         } catch (e) {
@@ -508,7 +509,8 @@ function ModeratorView() {
 
       if (gameData) {
         try {
-          const decompressed = LZString.decompressFromEncodedURIComponent(gameData);
+          const decodedUri = decodeURIComponent(gameData);
+          const decompressed = LZString.decompressFromBase64(decodedUri);
           const decodedPlayers = JSON.parse(decompressed);
           actions.setPlayers(decodedPlayers);
           console.log("Loaded players from URL in ModeratorView!", decodedPlayers);

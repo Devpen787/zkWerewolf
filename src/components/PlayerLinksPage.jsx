@@ -12,7 +12,8 @@ const PlayerLinksPage = () => {
   const encodedGameData = useMemo(() => {
     if (state.players.length === 0) return '';
     const json = JSON.stringify(state.players);
-    return LZString.compressToEncodedURIComponent(json);
+    const compressed = LZString.compressToBase64(json);
+    return encodeURIComponent(compressed);
   }, [state.players]);
 
   const handleOpenModeratorView = () => {
