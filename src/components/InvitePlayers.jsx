@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useGame } from '../context/GameContext';
 import { toast } from 'react-hot-toast';
+import LZString from 'lz-string';
 
 const InvitePlayers = () => {
   const [inviteMessage, setInviteMessage] = useState('');
@@ -8,7 +9,8 @@ const InvitePlayers = () => {
 
   const encodedGameData = useMemo(() => {
     if (state.players.length === 0) return '';
-    return encodeURIComponent(JSON.stringify(state.players));
+    const json = JSON.stringify(state.players);
+    return LZString.compressToEncodedURIComponent(json);
   }, [state.players]);
 
   const generateAndCopyMessage = () => {

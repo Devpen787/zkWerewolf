@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, useNavigate, useParams, useLocation } from 'react-router-dom'
 import CryptoJS from 'crypto-js'
 import { Toaster, toast } from 'react-hot-toast'
+import LZString from 'lz-string'
 
 import WelcomePage from './components/WelcomePage';
 import Navigation from './components/Navigation';
@@ -309,7 +310,8 @@ function PlayerPage() {
       const gameData = searchParams.get('game');
       if (gameData) {
         try {
-          const decodedPlayers = JSON.parse(decodeURIComponent(gameData));
+          const decompressed = LZString.decompressFromEncodedURIComponent(gameData);
+          const decodedPlayers = JSON.parse(decompressed);
           actions.setPlayers(decodedPlayers);
         } catch (e) {
           console.error("Failed to parse game data from URL", e);
@@ -506,7 +508,8 @@ function ModeratorView() {
 
       if (gameData) {
         try {
-          const decodedPlayers = JSON.parse(decodeURIComponent(gameData));
+          const decompressed = LZString.decompressFromEncodedURIComponent(gameData);
+          const decodedPlayers = JSON.parse(decompressed);
           actions.setPlayers(decodedPlayers);
           console.log("Loaded players from URL in ModeratorView!", decodedPlayers);
         } catch (e) {

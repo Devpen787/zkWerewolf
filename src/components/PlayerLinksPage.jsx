@@ -3,6 +3,7 @@ import { useGame } from '../context/GameContext';
 import InvitePlayers from './InvitePlayers';
 import Navigation from './Navigation';
 import { useNavigate } from 'react-router-dom';
+import LZString from 'lz-string';
 
 const PlayerLinksPage = () => {
   const { state, actions } = useGame();
@@ -10,7 +11,8 @@ const PlayerLinksPage = () => {
 
   const encodedGameData = useMemo(() => {
     if (state.players.length === 0) return '';
-    return encodeURIComponent(JSON.stringify(state.players));
+    const json = JSON.stringify(state.players);
+    return LZString.compressToEncodedURIComponent(json);
   }, [state.players]);
 
   const handleOpenModeratorView = () => {
