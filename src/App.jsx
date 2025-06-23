@@ -292,45 +292,48 @@ function GameSetup({ onGameStart }) {
 // Individual Player Page Component
 function PlayerPage() {
   const { playerId } = useParams()
-  const [showRole, setShowRole] = useState(true)
-  const [autoHideTimer, setAutoHideTimer] = useState(null)
-  
-  const { state, actions } = useGame()
-  const { players } = state;
-  let player = players.find(p => p.playerId === playerId)
-
   const location = useLocation();
+  const { state, actions } = useGame();
+  const [player, setPlayer] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [showRole, setShowRole] = useState(false)
 
   useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const gameData = searchParams.get('game');
+
+    let playersList = state.players;
+
     // If players aren't in context, try to load them from the URL
-    if (players.length === 0) {
-      const searchParams = new URLSearchParams(location.search);
-      const gameData = searchParams.get('game');
-
-      if (gameData) {
-        try {
-          const decodedPlayers = JSON.parse(atob(gameData));
-          actions.setPlayers(decodedPlayers);
-          console.log("Loaded players from URL!", decodedPlayers);
-        } catch (e) {
-          console.error("Failed to parse game data from URL", e);
-        }
+    if (playersList.length === 0 && gameData) {
+      try {
+        const decodedPlayers = JSON.parse(atob(gameData));
+        actions.setPlayers(decodedPlayers);
+        playersList = decodedPlayers; // Use the decoded list immediately
+        console.log("Loaded players from URL in PlayerPage!", decodedPlayers);
+      } catch (e) {
+        console.error("Failed to parse game data from URL", e);
+        setError("Could not load game data from the link. The data might be corrupted.");
+        setIsLoading(false);
+        return;
       }
+    } else if (playersList.length === 0) {
+       setError("This player link is invalid, the game session may have ended, or you might need to refresh.");
+       setIsLoading(false);
+       return;
     }
-  }, [players, location.search, actions]);
-  
-  // Refind player in case they were loaded from URL
-  if (!player && players.length > 0) {
-    player = players.find(p => p.playerId === playerId)
-  }
 
-  // Debugging logs
-  console.log("PlayerPage rendered", {
-    playerId,
-    playersInContext: players.length,
-    foundPlayer: player ? player.name : "Not found"
-  });
-  
+    const foundPlayer = playersList.find(p => p.playerId === playerId)
+    
+    if (foundPlayer) {
+      setPlayer(foundPlayer);
+    } else {
+      setError("This player link is invalid, the game session may have ended, or you might need to refresh.");
+    }
+    setIsLoading(false);
+  }, [playerId, location.search, state.players, actions]);
+
   useEffect(() => {
     if (player) {
       // Auto-hide role after 10 seconds
@@ -351,7 +354,7 @@ function PlayerPage() {
     setShowRole(!showRole)
   }
   
-  if (players.length === 0) {
+  if (isLoading) {
     return (
        <div className="min-h-screen text-[#4a3f3c] flex items-center justify-center">
         <div className="text-center bg-[#fdfaf6] p-8 rounded-xl shadow-lg">
@@ -362,13 +365,13 @@ function PlayerPage() {
     )
   }
 
-  if (!player) {
+  if (error) {
     return (
       <div className="min-h-screen text-[#4a3f3c] flex items-center justify-center">
         <Navigation showBackToWelcome={true} />
         <div className="text-center bg-[#fdfaf6] p-8 rounded-xl shadow-lg mt-20">
           <h1 className="text-2xl font-bold mb-4 font-fredoka">Player Not Found</h1>
-          <p className="text-[#6d4c41]">This player link is invalid, the game session may have ended, or you might need to refresh.</p>
+          <p className="text-[#6d4c41]">{error}</p>
         </div>
       </div>
     )
@@ -480,18 +483,20 @@ function PlayerPage() {
 
 // Moderator View Component
 function ModeratorView() {
-  const [currentPhase, setCurrentPhase] = useState(PHASES.NIGHT)
-  const [phaseStep, setPhaseStep] = useState(0)
-  const [zkProof, setZkProof] = useState(null)
-  
   const { state, actions } = useGame()
-  const { players } = state;
+  const { players } = state
+  const [currentPhase, setCurrentPhase] = useState(PHASES.NIGHT)
+  const [step, setStep] = useState(0) // For multi-step phases
+  const [zkProof, setZkProof] = useState(null)
+  const [isLoading, setIsLoading] = useState(true);
 
   const location = useLocation();
 
   useEffect(() => {
-    // If players aren't in context, try to load them from the URL
-    if (players.length === 0) {
+    let playersList = state.players;
+    
+    // If players aren't in context, try to load them from the URL or localStorage
+    if (playersList.length === 0) {
       const searchParams = new URLSearchParams(location.search);
       const gameData = searchParams.get('game');
 
@@ -505,12 +510,15 @@ function ModeratorView() {
         }
       }
     }
-  }, [players, location.search, actions]);
+     setIsLoading(false);
+  }, [state.players, location.search, actions]);
 
   // Debugging logs
-  console.log("ModeratorView rendered", {
-    playersInContext: players.length,
-  });
+  useEffect(() => {
+    console.log("ModeratorView rendered", {
+      playersInContext: players.length,
+    });
+  }, [players]);
   
   const phaseSteps = {
     [PHASES.NIGHT]: [
@@ -534,16 +542,16 @@ function ModeratorView() {
   const handlePhaseChange = () => {
     if (currentPhase === PHASES.NIGHT) {
       setCurrentPhase(PHASES.DAY)
-      setPhaseStep(0)
+      setStep(0)
     } else {
       setCurrentPhase(PHASES.NIGHT)
-      setPhaseStep(0)
+      setStep(0)
     }
   }
   
   const handleNextStep = () => {
-    if (phaseStep < phaseSteps[currentPhase].length - 1) {
-      setPhaseStep(phaseStep + 1)
+    if (step < phaseSteps[currentPhase].length - 1) {
+      setStep(step + 1)
     }
   }
   
@@ -553,7 +561,7 @@ function ModeratorView() {
     setZkProof(proof)
   }
   
-  if (players.length === 0) {
+  if (isLoading) {
     return (
        <div className="min-h-screen text-[#4a3f3c] flex items-center justify-center">
         <div className="text-center bg-[#fdfaf6] p-8 rounded-xl shadow-lg">
@@ -598,10 +606,10 @@ function ModeratorView() {
             
             <div className="bg-[#faf6f2] rounded-lg p-6 mb-6 border border-[#e0d8d4] shadow-soft">
               <h3 className="text-lg font-medium mb-4 font-fredoka text-brand-brown-700">Current Step:</h3>
-              <p className="text-brand-brown-700 mb-6 font-fredoka leading-relaxed">{phaseSteps[currentPhase][phaseStep]}</p>
+              <p className="text-brand-brown-700 mb-6 font-fredoka leading-relaxed">{phaseSteps[currentPhase][step]}</p>
               <button
                 onClick={handleNextStep}
-                disabled={phaseStep >= phaseSteps[currentPhase].length - 1}
+                disabled={step >= phaseSteps[currentPhase].length - 1}
                 className="bg-gradient-to-r from-brand-terracotta-500 to-brand-terracotta-400 hover:from-brand-terracotta-600 hover:to-brand-terracotta-500 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-fredoka font-bold px-6 py-3 rounded-lg transition-all duration-300 shadow-soft hover:shadow-medium tracking-wide"
               >
                 Next Step
@@ -683,8 +691,17 @@ function ModeratorView() {
 
 // Main App Component with Routing
 function App() {
-  const { state, actions } = useGame();
+  // Global state management
+  const [zkProof, setZkProof] = useState(null)
+  
+  const { state } = useGame()
+  const { players } = state;
 
+  // Debugging logs
+  useEffect(() => {
+    console.log('Global players state updated:', players)
+  }, [players])
+  
   // Debug logging
   console.log('App render - state:', {
     showWelcome: state.showWelcome,
