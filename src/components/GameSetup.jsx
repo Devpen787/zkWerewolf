@@ -1,17 +1,11 @@
 import React, { useState } from 'react';
 import Navigation from './Navigation';
+import { getWerewolfCount } from '../utils/gameUtils';
 
 const GameSetup = ({ onGameStart }) => {
   const [playerCount, setPlayerCount] = useState(4);
   const [playerNames, setPlayerNames] = useState([]);
   const [currentPhase, setCurrentPhase] = useState('count'); // 'count' or 'names'
-
-  const getWerewolfCount = () => {
-    if (playerCount <= 6) return 1;
-    if (playerCount <= 10) return 2;
-    if (playerCount <= 13) return 3;
-    return 4;
-  };
 
   const handleNextPhase = () => {
     if (currentPhase === 'count') {
@@ -45,7 +39,6 @@ const GameSetup = ({ onGameStart }) => {
   return (
     <div className="min-h-screen text-[#4a3f3c]">
       <Navigation
-        showBackToWelcome={true}
         showBack={currentPhase === 'names'}
         showNext={currentPhase === 'count'}
         onBack={handleBackPhase}
@@ -85,10 +78,10 @@ const GameSetup = ({ onGameStart }) => {
                 </div>
                 <div className="text-md text-brand-brown-700 space-y-2 font-fredoka bg-brand-brown-50 p-6 rounded-lg border border-brand-brown-200 shadow-inner">
                   <p>Players: {playerCount}</p>
-                  <p>Werewolves: {getWerewolfCount()}</p>
+                  <p>Werewolves: {getWerewolfCount(playerCount)}</p>
                   <p>Healer: 1</p>
                   <p>Detective: 1</p>
-                  <p>Villagers: {Math.max(0, playerCount - getWerewolfCount() - 2)}</p>
+                  <p>Villagers: {Math.max(0, playerCount - getWerewolfCount(playerCount) - 2)}</p>
                 </div>
                 <button
                   onClick={handleNextPhase}
@@ -114,20 +107,12 @@ const GameSetup = ({ onGameStart }) => {
                     />
                   </div>
                 ))}
-                <div className="flex space-x-4 pt-4">
-                  <button
-                    onClick={handleBackPhase}
-                    className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-4 px-6 rounded-lg transition-all duration-300 font-fredoka tracking-wide shadow-soft hover:shadow-medium"
-                  >
-                    Back
-                  </button>
-                  <button
-                    onClick={handleStartGame}
-                    className="flex-1 bg-gradient-to-r from-brand-terracotta-500 to-brand-terracotta-400 hover:from-brand-terracotta-600 hover:to-brand-terracotta-500 text-white font-bold py-4 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-strong text-xl font-fredoka tracking-wide drop-shadow-soft"
-                  >
-                    Start Game
-                  </button>
-                </div>
+                <button
+                  onClick={handleStartGame}
+                  className="w-full bg-gradient-to-r from-brand-terracotta-500 to-brand-terracotta-400 hover:from-brand-terracotta-600 hover:to-brand-terracotta-500 text-white font-bold py-4 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-strong text-xl font-fredoka tracking-wide drop-shadow-soft"
+                >
+                  Start Game
+                </button>
               </div>
             )}
           </div>

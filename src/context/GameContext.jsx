@@ -1,8 +1,16 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import { ERROR_MESSAGES } from '../utils/constants';
+
+// LocalStorage keys
+const STORAGE_KEYS = {
+  PLAYERS: 'zkWerewolfPlayers',
+  GAME_STATE: 'zkWerewolfGameState'
+};
 
 // Initial state
 const initialState = {
   players: [],
+  eliminatedPlayers: [], // Array of player IDs that have been eliminated
   gamePhase: 'night', // 'night', 'day'
   phaseStep: 0,
   zkProof: null
@@ -15,6 +23,7 @@ const ACTIONS = {
   SET_GAME_PHASE: 'SET_GAME_PHASE',
   SET_PHASE_STEP: 'SET_PHASE_STEP',
   SET_ZK_PROOF: 'SET_ZK_PROOF',
+  TOGGLE_PLAYER_ELIMINATION: 'TOGGLE_PLAYER_ELIMINATION',
   LOAD_FROM_STORAGE: 'LOAD_FROM_STORAGE'
 };
 
@@ -50,6 +59,16 @@ const gameReducer = (state, action) => {
         zkProof: action.payload
       };
     
+    case ACTIONS.TOGGLE_PLAYER_ELIMINATION:
+      const { playerId } = action.payload;
+      const isEliminated = state.eliminatedPlayers.includes(playerId);
+      return {
+        ...state,
+        eliminatedPlayers: isEliminated
+          ? state.eliminatedPlayers.filter(id => id !== playerId)
+          : [...state.eliminatedPlayers, playerId]
+      };
+    
     case ACTIONS.LOAD_FROM_STORAGE:
       return {
         ...state,
@@ -71,8 +90,8 @@ export const GameProvider = ({ children }) => {
   // Load from localStorage on mount
   useEffect(() => {
     try {
-      const savedPlayers = localStorage.getItem('zkWerewolfPlayers');
-      const savedGameState = localStorage.getItem('zkWerewolfGameState');
+      const savedPlayers = localStorage.getItem(STORAGE_KEYS.PLAYERS);
+      const savedGameState = localStorage.getItem(STORAGE_KEYS.GAME_STATE);
       
       if (savedPlayers && savedGameState) {
         const players = JSON.parse(savedPlayers);
@@ -87,35 +106,40 @@ export const GameProvider = ({ children }) => {
         });
       }
     } catch (error) {
-      console.error("Failed to load game state from localStorage", error);
-      localStorage.removeItem('zkWerewolfPlayers');
-      localStorage.removeItem('zkWerewolfGameState');
+      console.error(ERROR_MESSAGES.LOAD_STORAGE, error);
+      localStorage.removeItem(STORAGE_KEYS.PLAYERS);
+      localStorage.removeItem(STORAGE_KEYS.GAME_STATE);
     }
   }, []);
 
   // Save to localStorage when state changes
   useEffect(() => {
     if (state.players.length > 0) {
-      localStorage.setItem('zkWerewolfPlayers', JSON.stringify(state.players));
-      localStorage.setItem('zkWerewolfGameState', JSON.stringify({
+      localStorage.setItem(STORAGE_KEYS.PLAYERS, JSON.stringify(state.players));
+      localStorage.setItem(STORAGE_KEYS.GAME_STATE, JSON.stringify({
+        eliminatedPlayers: state.eliminatedPlayers,
         gamePhase: state.gamePhase,
         phaseStep: state.phaseStep,
         zkProof: state.zkProof
       }));
     }
-  }, [state.players, state.gamePhase, state.phaseStep, state.zkProof]);
+  }, [state.players, state.eliminatedPlayers, state.gamePhase, state.phaseStep, state.zkProof]);
 
   // Actions
   const actions = {
     setPlayers: (players) => dispatch({ type: ACTIONS.SET_PLAYERS, payload: players }),
     newGame: () => {
-      localStorage.removeItem('zkWerewolfPlayers');
-      localStorage.removeItem('zkWerewolfGameState');
+      localStorage.removeItem(STORAGE_KEYS.PLAYERS);
+      localStorage.removeItem(STORAGE_KEYS.GAME_STATE);
       dispatch({ type: ACTIONS.NEW_GAME });
     },
     setGamePhase: (phase) => dispatch({ type: ACTIONS.SET_GAME_PHASE, payload: phase }),
     setPhaseStep: (step) => dispatch({ type: ACTIONS.SET_PHASE_STEP, payload: step }),
     setZkProof: (proof) => dispatch({ type: ACTIONS.SET_ZK_PROOF, payload: proof }),
+    togglePlayerElimination: (playerId) => dispatch({ 
+      type: ACTIONS.TOGGLE_PLAYER_ELIMINATION, 
+      payload: { playerId } 
+    }),
   };
 
   return (

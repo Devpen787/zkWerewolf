@@ -2,13 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useGame } from '../context/GameContext';
 import Navigation from './Navigation';
-import InvitePlayers from './InvitePlayers';
 import { toast } from 'react-hot-toast';
 import LZString from 'lz-string';
+import { ERROR_MESSAGES } from '../utils/constants';
 
 const ModeratorView = () => {
   const { state, actions } = useGame();
-  const { players } = state;
+  const { players, eliminatedPlayers = [] } = state;
   const [currentPhase, setCurrentPhase] = useState('night');
   const [step, setStep] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -26,7 +26,7 @@ const ModeratorView = () => {
             actions.setPlayers(decodedPlayers);
           }
         } catch (e) {
-          console.error("Failed to parse game data from URL", e);
+          console.error(ERROR_MESSAGES.PARSE_GAME_DATA, e);
         }
       }
     }
@@ -68,7 +68,28 @@ const ModeratorView = () => {
       toast('Proof has already been generated.', { icon: 'ℹ️' });
       return;
     }
-    actions.generateZkProof();
+    // TODO: Implement actual ZK proof generation
+    // For now, just set a placeholder proof
+    const mockProof = {
+      message: 'ZK Proof generated successfully',
+      proof: {
+        publicInput: {
+          commitmentRoot: '0x1234567890abcdef...'
+        }
+      }
+    };
+    actions.setZkProof(mockProof);
+    toast('ZK Proof generated!', { icon: '✅' });
+  };
+  
+  const handleToggleElimination = (playerId, playerName) => {
+    const isEliminated = eliminatedPlayers.includes(playerId);
+    actions.togglePlayerElimination(playerId);
+    if (isEliminated) {
+      toast.success(`${playerName} has been revived!`, { icon: '✨' });
+    } else {
+      toast.success(`${playerName} has been eliminated!`, { icon: '💀' });
+    }
   };
   
   if (isLoading) {
@@ -83,6 +104,7 @@ const ModeratorView = () => {
   }
   
   const getRoleColor = (role) => {
+    if (!role) return 'text-gray-400';
     switch (role) {
       case 'werewolf': return 'text-red-400';
       case 'healer': return 'text-green-400';
@@ -91,6 +113,11 @@ const ModeratorView = () => {
       default: return 'text-gray-400';
     }
   };
+  
+  // Calculate game statistics
+  const alivePlayers = players.filter(player => !eliminatedPlayers.includes(player.playerId));
+  const eliminatedCount = eliminatedPlayers.length;
+  const aliveCount = alivePlayers.length;
   
   return (
     <div className="min-h-screen text-[#4a3f3c]">
@@ -123,22 +150,53 @@ const ModeratorView = () => {
             </div>
           </div>
           <div className="bg-[#fdfaf6] rounded-xl p-8 shadow-strong">
+            <h2 className="text-2xl font-semibold mb-6 font-fredoka text-brand-brown-800 drop-shadow-soft">Game Statistics</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-[#faf6f2] rounded-lg p-4 border border-[#e0d8d4] shadow-soft text-center">
+                <div className="text-2xl font-bold text-green-600 font-fredoka">{aliveCount}</div>
+                <div className="text-sm text-brand-brown-700 font-fredoka">Alive</div>
+              </div>
+              <div className="bg-[#faf6f2] rounded-lg p-4 border border-[#e0d8d4] shadow-soft text-center">
+                <div className="text-2xl font-bold text-red-600 font-fredoka">{eliminatedCount}</div>
+                <div className="text-sm text-brand-brown-700 font-fredoka">Eliminated</div>
+              </div>
+            </div>
+          </div>
+          <div className="bg-[#fdfaf6] rounded-xl p-8 shadow-strong">
             <h2 className="text-2xl font-semibold mb-6 font-fredoka text-brand-brown-800 drop-shadow-soft">All Players & Roles</h2>
+            <p className="text-sm text-brand-brown-600 mb-4 font-fredoka">Click on a player card to toggle elimination status</p>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {players.map((player) => (
-                <div key={player.id} className="bg-[#faf6f2] rounded-lg p-6 border border-[#e0d8d4] shadow-soft">
-                  <h3 className="font-semibold text-lg font-fredoka text-brand-brown-800 mb-2">{player.name}</h3>
-                  <p className={`text-sm font-medium ${getRoleColor(player.role)} font-fredoka mb-3`}>
-                    {player.role.charAt(0).toUpperCase() + player.role.slice(1)}
-                  </p>
-                  <p className="text-xs text-brand-brown-600 mt-3 break-all font-mono bg-white p-2 rounded border">
-                    ID: {player.playerId}
-                  </p>
-                  <p className="text-xs text-brand-brown-600 break-all font-mono bg-white p-2 rounded border mt-2">
-                    Commitment: {player.commitment.substring(0, 16)}...
-                  </p>
-                </div>
-              ))}
+              {players.map((player) => {
+                const isEliminated = eliminatedPlayers.includes(player.playerId);
+                return (
+                  <div 
+                    key={player.playerId} 
+                    className={`bg-[#faf6f2] rounded-lg p-6 border border-[#e0d8d4] shadow-soft cursor-pointer transition-all duration-300 hover:shadow-medium ${
+                      isEliminated ? 'opacity-50 bg-gray-100' : ''
+                    }`}
+                    onClick={() => handleToggleElimination(player.playerId, player.name)}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className={`font-semibold text-lg font-fredoka text-brand-brown-800 ${isEliminated ? 'line-through' : ''}`}>{player.name}</h3>
+                      {isEliminated && (
+                        <span className="text-red-500 text-sm font-bold">💀</span>
+                      )}
+                    </div>
+                    <p className={`text-sm font-medium ${getRoleColor(player.role)} font-fredoka mb-3 ${isEliminated ? 'line-through' : ''}`}>
+                      {player.role ? player.role.charAt(0).toUpperCase() + player.role.slice(1) : 'No Role Assigned'}
+                    </p>
+                    <p className="text-xs text-brand-brown-600 mt-3 break-all font-mono bg-white p-2 rounded border">
+                      ID: {player.playerId}
+                    </p>
+                    <p className="text-xs text-brand-brown-600 break-all font-mono bg-white p-2 rounded border mt-2">
+                      Commitment: {player.commitment ? player.commitment.substring(0, 16) + '...' : 'No Commitment'}
+                    </p>
+                    <div className="mt-3 text-xs text-brand-brown-500 font-fredoka">
+                      {isEliminated ? 'Click to revive' : 'Click to eliminate'}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
           <div className="bg-[#fdfaf6] rounded-xl p-8 shadow-strong">

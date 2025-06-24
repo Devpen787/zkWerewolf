@@ -30,34 +30,37 @@ const Navigation = ({
       <div className="container mx-auto px-4 py-3">
         <div className="flex justify-between items-center">
           {/* Left-side Actions */}
-          <div className="flex items-center gap-4">
-            {showBackToWelcome && (
+          <div className="flex items-center gap-4 min-w-[160px]">
+            {Boolean(showBackToWelcome) ? (
               <button
                 onClick={handleBackToWelcome}
                 className="text-brand-brown-700 hover:text-brand-terracotta-600 font-semibold transition-colors text-sm"
               >
                 &larr; Back to Welcome
               </button>
-            )}
-            {showBack && (
+            ) : Boolean(showBack) ? (
               <button
                 onClick={onBack}
                 className="text-brand-brown-700 hover:text-brand-terracotta-600 font-semibold transition-colors text-sm"
               >
                 &larr; {backText}
               </button>
+            ) : (
+              <div className="w-[120px]" />
             )}
           </div>
           
           {/* Right-side Actions */}
-          <div className="flex items-center gap-4">
-            {showNext && (
-               <button
+          <div className="flex items-center gap-4 min-w-[160px] justify-end">
+            {Boolean(showNext) ? (
+              <button
                 onClick={onNext}
                 className="text-brand-brown-700 hover:text-brand-terracotta-600 font-semibold transition-colors text-sm"
               >
                 {nextText} &rarr;
               </button>
+            ) : (
+              <div className="w-[120px]" />
             )}
           </div>
         </div>

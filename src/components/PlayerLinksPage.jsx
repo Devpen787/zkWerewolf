@@ -5,6 +5,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import LZString from 'lz-string';
 import InvitePlayers from './InvitePlayers';
 import { toast } from 'react-hot-toast';
+import { TOAST_MESSAGES, ERROR_MESSAGES } from '../utils/constants';
 
 const PlayerLinksPage = () => {
   const { state, actions } = useGame();
@@ -22,8 +23,8 @@ const PlayerLinksPage = () => {
           actions.setPlayers(players);
         }
       } catch (e) {
-        console.error("Failed to parse game data from URL", e);
-        toast.error("Invalid game link.");
+        console.error(ERROR_MESSAGES.PARSE_GAME_DATA, e);
+        toast.error(TOAST_MESSAGES.INVALID_GAME_LINK);
         navigate('/');
       }
     }
@@ -37,7 +38,6 @@ const PlayerLinksPage = () => {
   }, [state.players]);
 
   const handleOpenModeratorView = () => {
-    // Generate the full URL for the moderator page
     const moderatorUrl = `${window.location.origin}/moderator?game=${encodedGameData}`;
     window.open(moderatorUrl, '_blank');
   };
@@ -56,32 +56,6 @@ const PlayerLinksPage = () => {
           
           <InvitePlayers encodedGameData={encodedGameData} />
 
-          {/* Player Links */}
-          <div className="bg-[#fdfaf6] rounded-xl p-8 shadow-strong">
-            <h2 className="text-3xl font-semibold mb-6 font-fredoka text-center text-brand-brown-800 drop-shadow-soft">Player Links</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-              {state.players.map((player) => {
-                const playerUrl = `${window.location.origin}/player/${player.playerId}?game=${encodedGameData}`;
-                
-                return (
-                  <div key={player.playerId} className="bg-[#faf6f2] rounded-lg p-4 border border-[#e0d8d4] shadow-soft flex flex-col justify-between">
-                    <h3 className="font-semibold text-lg mb-3 font-fredoka text-brand-brown-800">{player.name}</h3>
-                    <div className="flex items-center space-x-3">
-                       <a
-                        href={playerUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-brand-terracotta-600 hover:text-brand-terracotta-700 text-sm break-all font-mono bg-white p-2 rounded border transition-colors flex-grow"
-                      >
-                        {`/player/${player.playerId.substring(0, 12)}...`}
-                      </a>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-          
           {/* Game Controls */}
           <div className="flex flex-col md:flex-row justify-center items-center space-y-4 md:space-y-0 md:space-x-6 mt-8">
             <button

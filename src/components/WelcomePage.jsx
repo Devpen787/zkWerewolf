@@ -6,21 +6,62 @@ import {
   AccordionItemButton,
   AccordionItemPanel,
 } from 'react-accessible-accordion';
+import { motion } from 'framer-motion';
 
-import logoImage from '../assets/logo.png';
+import logoImage from '../assets/Logo.png';
+import villager from '../assets/villager head.png';
+import healer from '../assets/healer head.png';
+import detective from '../assets/detective head.png';
+import werewolf from '../assets/werewolf head.png';
 import './WelcomePage.css';
+
+const roles = [
+  { name: 'villager', img: villager },
+  { name: 'healer', img: healer },
+  { name: 'detective', img: detective },
+  { name: 'werewolf', img: werewolf },
+];
 
 const WelcomePage = ({ onStart }) => {
   return (
     <div className="min-h-screen text-[#4a3f3c] flex flex-col">
       <main className="container mx-auto px-4 py-16 flex-grow">
-        <div className="flex flex-col items-center text-center gap-8">
+        <div className="flex flex-col items-center text-center gap-4">
           {/* Logo Image */}
           <img
             src={logoImage}
             alt="zkWerewolf Logo"
-            className="w-full max-w-lg object-contain drop-shadow-soft"
+            className="w-full max-w-lg object-contain drop-shadow-soft mb-0"
           />
+
+          {/* Animated Role Heads */}
+          <div className="flex justify-center gap-3 mt-[-12px] mb-2">
+            {roles.map((role, index) => (
+              <motion.img
+                key={role.name}
+                src={role.img}
+                alt={role.name}
+                className="w-16 h-16 rounded-full object-contain"
+                initial={{ scale: 0.5, opacity: 0 }}
+                animate={{
+                  scale: 1,
+                  opacity: 1,
+                  rotate: [0, -3, 3, -3, 3, 0],
+                }}
+                transition={{
+                  delay: index * 0.25,
+                  scale: { type: 'spring', stiffness: 300, damping: 20 },
+                  rotate: {
+                    repeat: Infinity,
+                    duration: 4,
+                    repeatType: 'loop',
+                    ease: 'easeInOut',
+                    delay: index * 0.25 + 1.5, // start after pop-in
+                  },
+                }}
+              />
+            ))}
+          </div>
 
           {/* Subtitle */}
           <p className="text-lg md:text-xl text-brand-brown-800 max-w-2xl font-fredoka leading-relaxed drop-shadow-soft">
