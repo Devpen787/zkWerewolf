@@ -7,6 +7,7 @@ import {
   AccordionItemPanel,
 } from 'react-accessible-accordion';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 
 import logoImage from '../assets/Logo.png';
 import villager from '../assets/villager head.png';
@@ -23,15 +24,21 @@ const roles = [
 ];
 
 const WelcomePage = ({ onStart }) => {
+  const navigate = useNavigate();
+
+  const handleZKPassportClick = () => {
+    navigate('/zk-verification');
+  };
+
   return (
     <div className="min-h-screen text-[#4a3f3c] flex flex-col">
       <main className="container mx-auto px-4 py-16 flex-grow">
-        <div className="flex flex-col items-center text-center gap-4">
+        <div className="flex flex-col items-center text-center gap-8">
           {/* Logo Image */}
           <img
             src={logoImage}
             alt="zkWerewolf Logo"
-            className="w-full max-w-lg object-contain drop-shadow-soft mb-0"
+            className="w-full max-w-lg object-contain drop-shadow-soft"
           />
 
           {/* Animated Role Heads */}
@@ -75,6 +82,33 @@ const WelcomePage = ({ onStart }) => {
           >
             Play Now
           </button>
+
+          {/* Play with ZK Verification Button */}
+          <button
+            onClick={handleZKPassportClick}
+            className="mt-2 bg-white border border-brand-terracotta-500 text-brand-terracotta-600 font-bold py-3 px-12 rounded-lg transition-all duration-300 transform hover:bg-brand-terracotta-50 hover:scale-105 shadow-soft text-lg font-fredoka tracking-wide flex items-center gap-2"
+          >
+            <span className="text-xl">🛡️</span> Play with ZK Verification
+          </button>
+
+          {/* ZK Passport Option (optional, can be removed if redundant) */}
+          {/*
+          <div className="mt-8 p-4 bg-gradient-to-r from-brand-cream-50 to-brand-cream-100 rounded-lg border border-brand-brown-200 max-w-md">
+            <h3 className="font-bold text-brand-brown-800 mb-2 flex items-center gap-2">
+              <span className="text-lg">🛡️</span>
+              Optional: ZK Passport Verification
+            </h3>
+            <p className="text-sm text-brand-brown-600 mb-3">
+              Prove you're a real person without sharing any personal information using zero-knowledge proofs.
+            </p>
+            <button
+              onClick={handleZKPassportClick}
+              className="bg-brand-terracotta-500 hover:bg-brand-terracotta-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors text-sm"
+            >
+              Learn More
+            </button>
+          </div>
+          */}
 
           {/* Accordion Section */}
           <div className="w-full max-w-4xl mt-8">

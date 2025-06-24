@@ -10,6 +10,7 @@ import GameSetup from './components/GameSetup';
 import PlayerLinksPage from './components/PlayerLinksPage';
 import PlayerPage from './components/PlayerPage';
 import ModeratorView from './components/ModeratorView';
+import ZKVerificationPage from './components/ZKVerificationPage';
 
 function App() {
   return (
@@ -66,6 +67,7 @@ function MainApp() {
       <Route path="/player-links" element={<PlayerLinksPage />} />
       <Route path="/player/:playerId" element={<PlayerPage />} />
       <Route path="/moderator" element={<ModeratorView />} />
+      <Route path="/zk-verification" element={<ZKVerificationPage />} />
     </Routes>
   );
 }
