@@ -4,7 +4,6 @@ import { useGame } from '../context/GameContext';
 import Navigation from './Navigation';
 import { toast } from 'react-hot-toast';
 import LZString from 'lz-string';
-import { ERROR_MESSAGES } from '../utils/constants';
 
 const ModeratorView = () => {
   const { state, actions } = useGame();
@@ -12,6 +11,7 @@ const ModeratorView = () => {
   const [currentPhase, setCurrentPhase] = useState('night');
   const [step, setStep] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   const location = useLocation();
 
   useEffect(() => {
@@ -26,8 +26,10 @@ const ModeratorView = () => {
             actions.setPlayers(decodedPlayers);
           }
         } catch (e) {
-          console.error(ERROR_MESSAGES.PARSE_GAME_DATA, e);
+          setError('Could not load game data. The link may be corrupted or expired.');
         }
+      } else {
+        setError('No game data found in the link.');
       }
     }
     setIsLoading(false);
@@ -68,8 +70,6 @@ const ModeratorView = () => {
       toast('Proof has already been generated.', { icon: 'ℹ️' });
       return;
     }
-    // TODO: Implement actual ZK proof generation
-    // For now, just set a placeholder proof
     const mockProof = {
       message: 'ZK Proof generated successfully',
       proof: {
@@ -98,6 +98,18 @@ const ModeratorView = () => {
         <div className="text-center bg-[#fdfaf6] p-8 rounded-xl shadow-lg">
           <h1 className="text-2xl font-bold mb-4 font-fredoka">Loading Moderator View...</h1>
           <p className="text-[#6d4c41]">Please wait while we fetch the game data.</p>
+        </div>
+      </div>
+    );
+  }
+  
+  if (error) {
+    return (
+      <div className="min-h-screen text-[#4a3f3c] flex items-center justify-center">
+        <Navigation showBackToWelcome={true} />
+        <div className="text-center bg-[#fdfaf6] p-8 rounded-xl shadow-lg mt-20">
+          <h1 className="text-2xl font-bold mb-4 font-fredoka">Game Data Error</h1>
+          <p className="text-[#6d4c41]">{error}</p>
         </div>
       </div>
     );

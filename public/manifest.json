@@ -1,0 +1,16 @@
+{
+  "name": "zkWerewolf",
+  "short_name": "zkWerewolf",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#fdfaf6",
+  "theme_color": "#e07a5f",
+  "description": "A privacy-first party game of deception and deduction.",
+  "icons": [
+    {
+      "src": "favicon.ico",
+      "sizes": "48x48 64x64 96x96 128x128 256x256",
+      "type": "image/x-icon"
+    }
+  ]
+} 

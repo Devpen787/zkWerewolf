@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import Navigation from './Navigation';
 import { getWerewolfCount } from '../utils/gameUtils';
+import PropTypes from 'prop-types';
 
 const GameSetup = ({ onGameStart }) => {
   const [playerCount, setPlayerCount] = useState(4);
   const [playerNames, setPlayerNames] = useState([]);
   const [currentPhase, setCurrentPhase] = useState('count'); // 'count' or 'names'
+  const [error, setError] = useState(null);
 
   const handleNextPhase = () => {
     if (currentPhase === 'count') {
@@ -29,9 +31,10 @@ const GameSetup = ({ onGameStart }) => {
 
   const handleStartGame = () => {
     if (playerNames.some(name => name.trim() === '')) {
-      alert('Please fill in all player names');
+      setError('Please fill in all player names.');
       return;
     }
+    setError(null);
     // The role assignment and commitment generation will be handled in the GameContext now
     onGameStart(playerNames);
   };
@@ -39,6 +42,7 @@ const GameSetup = ({ onGameStart }) => {
   return (
     <div className="min-h-screen text-[#4a3f3c]">
       <Navigation
+        showBackToWelcome={true}
         showBack={currentPhase === 'names'}
         showNext={currentPhase === 'count'}
         onBack={handleBackPhase}
@@ -93,6 +97,11 @@ const GameSetup = ({ onGameStart }) => {
             ) : (
               <div className="space-y-6">
                 <h3 className="text-xl font-semibold mb-6 text-brand-brown-800 font-fredoka drop-shadow-soft">Enter Player Names</h3>
+                {error && (
+                  <div className="mb-4 p-3 bg-red-100 border border-red-300 text-red-700 rounded-lg text-sm font-semibold text-center">
+                    {error}
+                  </div>
+                )}
                 {playerNames.map((name, index) => (
                   <div key={index}>
                     <label className="block text-sm font-medium mb-3 text-brand-brown-700 font-fredoka">
@@ -120,6 +129,10 @@ const GameSetup = ({ onGameStart }) => {
       </div>
     </div>
   );
+};
+
+GameSetup.propTypes = {
+  onGameStart: PropTypes.func.isRequired,
 };
 
 export default GameSetup; 

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useGame } from '../context/GameContext';
 import { toast } from 'react-hot-toast';
 import { WhatsAppIcon, TelegramIcon } from './Icons';
@@ -11,6 +11,7 @@ import {
   ERROR_MESSAGES, 
   TINYURL_CONFIG 
 } from '../utils/constants';
+import PropTypes from 'prop-types';
 
 const InvitePlayers = ({ encodedGameData }) => {
   const { state } = useGame();
@@ -22,6 +23,38 @@ const InvitePlayers = ({ encodedGameData }) => {
     return `${window.location.origin}/player/${playerId}?game=${encodedGameData}`;
   };
 
+  // Helper to fetch short URL for a single player (for Retry)
+  const fetchShortUrlForPlayer = useCallback((player) => {
+    const longUrl = `${window.location.origin}/player/${player.playerId}?game=${encodedGameData}`;
+    setLoadingLinks((prev) => ({ ...prev, [player.playerId]: true }));
+    const fetchShortUrl = async (retryCount = 0) => {
+      try {
+        const response = await fetch(
+          `${TINYURL_API}?url=${encodeURIComponent(longUrl)}`
+        );
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        const shortUrl = await response.text();
+        if (shortUrl && shortUrl.startsWith('http')) {
+          setShortLinks((prev) => ({ ...prev, [player.playerId]: shortUrl }));
+        } else {
+          throw new Error(ERROR_MESSAGES.INVALID_TINYURL_RESPONSE);
+        }
+      } catch (error) {
+        if (retryCount < TINYURL_CONFIG.MAX_RETRIES) {
+          setTimeout(() => fetchShortUrl(retryCount + 1), TINYURL_CONFIG.RETRY_DELAY);
+          return;
+        }
+        setShortLinks((prev) => ({ ...prev, [player.playerId]: longUrl }));
+        console.warn(`Failed to shorten URL for ${player.name} after ${retryCount + 1} attempts:`, error.message);
+      } finally {
+        setLoadingLinks((prev) => ({ ...prev, [player.playerId]: false }));
+      }
+    };
+    fetchShortUrl();
+  }, [encodedGameData]);
+
   // Fetch short URLs for all players when component mounts or data changes
   useEffect(() => {
     // Only proceed if we have players and encoded game data
@@ -29,63 +62,14 @@ const InvitePlayers = ({ encodedGameData }) => {
       return;
     }
 
-    const abortController = new AbortController();
-    
     // Reset state for fresh generation
     setShortLinks({});
     setLoadingLinks({});
     
     state.players.forEach((player) => {
-      const longUrl = getPlayerInviteUrl(player.playerId);
-      setLoadingLinks((prev) => ({ ...prev, [player.playerId]: true }));
-      
-      // Retry logic for TinyURL API
-      const fetchShortUrl = async (retryCount = 0) => {
-        try {
-          const response = await fetch(
-            `${TINYURL_API}?url=${encodeURIComponent(longUrl)}`,
-            { signal: abortController.signal }
-          );
-          
-          if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
-          }
-          
-          const shortUrl = await response.text();
-          
-          // Validate the response is actually a URL
-          if (shortUrl && shortUrl.startsWith('http')) {
-            setShortLinks((prev) => ({ ...prev, [player.playerId]: shortUrl }));
-          } else {
-            throw new Error(ERROR_MESSAGES.INVALID_TINYURL_RESPONSE);
-          }
-        } catch (error) {
-          if (error.name === 'AbortError') {
-            return; // Component unmounted, don't update state
-          }
-          
-          if (retryCount < TINYURL_CONFIG.MAX_RETRIES) {
-            // Retry after delay
-            setTimeout(() => fetchShortUrl(retryCount + 1), TINYURL_CONFIG.RETRY_DELAY);
-            return;
-          }
-          
-          // Fallback to long URL after retries
-          setShortLinks((prev) => ({ ...prev, [player.playerId]: longUrl }));
-          console.warn(`Failed to shorten URL for ${player.name} after ${retryCount + 1} attempts:`, error.message);
-        } finally {
-          setLoadingLinks((prev) => ({ ...prev, [player.playerId]: false }));
-        }
-      };
-      
-      fetchShortUrl();
+      fetchShortUrlForPlayer(player);
     });
-    
-    // Cleanup function
-    return () => {
-      abortController.abort();
-    };
-  }, [state.players, encodedGameData]);
+  }, [state.players, encodedGameData, fetchShortUrlForPlayer]);
 
   // Generate the formatted list of player links (using short links if available)
   const getFormattedLinks = () => {
@@ -149,14 +133,27 @@ ${SHARE_MESSAGES.OUTRO}`;
                     {loadingLinks[player.playerId] ? (
                       <span className="text-gray-400 italic">Shortening...</span>
                     ) : (
-                      <a
-                        href={shortLinks[player.playerId] || getPlayerInviteUrl(player.playerId)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 underline break-all hover:text-blue-800"
-                      >
-                        {shortLinks[player.playerId] || getPlayerInviteUrl(player.playerId)}
-                      </a>
+                      <>
+                        <a
+                          href={shortLinks[player.playerId] || getPlayerInviteUrl(player.playerId)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 underline break-all hover:text-blue-800"
+                        >
+                          {shortLinks[player.playerId] || getPlayerInviteUrl(player.playerId)}
+                        </a>
+                        {/* Retry button if shortening failed */}
+                        {shortLinks[player.playerId] === getPlayerInviteUrl(player.playerId) && (
+                          <button
+                            className="ml-2 px-2 py-1 bg-yellow-200 text-yellow-900 rounded text-xs font-semibold border border-yellow-400 hover:bg-yellow-300 transition"
+                            onClick={() => fetchShortUrlForPlayer(player)}
+                            disabled={loadingLinks[player.playerId]}
+                            title="Retry shortening this link"
+                          >
+                            Retry
+                          </button>
+                        )}
+                      </>
                     )}
                   </td>
                 </tr>
@@ -194,6 +191,10 @@ ${SHARE_MESSAGES.OUTRO}`;
       </div>
     </div>
   );
+};
+
+InvitePlayers.propTypes = {
+  encodedGameData: PropTypes.string.isRequired,
 };
 
 export default InvitePlayers; 

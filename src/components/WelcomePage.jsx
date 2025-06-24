@@ -8,6 +8,7 @@ import {
 } from 'react-accessible-accordion';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import PropTypes from 'prop-types';
 
 import logoImage from '../assets/logo.png';
 import villager from '../assets/villager head.png';
@@ -32,7 +33,7 @@ const WelcomePage = ({ onStart }) => {
 
   return (
     <div className="min-h-screen text-[#4a3f3c] flex flex-col">
-      <main className="container mx-auto px-4 py-16 flex-grow">
+      <main className="container mx-auto px-4 py-6">
         <div className="flex flex-col items-center text-center gap-8">
           {/* Logo Image */}
           <img
@@ -111,7 +112,7 @@ const WelcomePage = ({ onStart }) => {
           */}
 
           {/* Accordion Section */}
-          <div className="w-full max-w-4xl mt-8">
+          <div className="w-full max-w-4xl mt-4">
             <Accordion allowZeroExpanded>
               <AccordionItem>
                 <AccordionItemHeading>
@@ -211,11 +212,15 @@ const WelcomePage = ({ onStart }) => {
       </main>
 
       {/* Footer */}
-      <footer className="text-center py-8 text-brand-brown-700 font-fredoka">
+      <footer className="text-center py-4 text-brand-brown-700 font-fredoka">
         <p>Developed by Devinson Peña</p>
       </footer>
     </div>
   );
+};
+
+WelcomePage.propTypes = {
+  onStart: PropTypes.func.isRequired,
 };
 
 export default WelcomePage; 

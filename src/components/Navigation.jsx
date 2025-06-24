@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import PropTypes from 'prop-types';
 
 const Navigation = ({ 
   showBackToWelcome = false, 
@@ -9,20 +10,13 @@ const Navigation = ({
   onNext,
   backText = "Back",
   nextText = "Next",
-  className = ""
 }) => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   const handleBackToWelcome = () => {
     if (window.confirm('Are you sure you want to leave this game and return to the main menu?')) {
         navigate('/');
     }
-  };
-
-  const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen);
   };
 
   return (
@@ -31,14 +25,14 @@ const Navigation = ({
         <div className="flex justify-between items-center">
           {/* Left-side Actions */}
           <div className="flex items-center gap-4 min-w-[160px]">
-            {Boolean(showBackToWelcome) ? (
+            {showBackToWelcome ? (
               <button
                 onClick={handleBackToWelcome}
                 className="text-brand-brown-700 hover:text-brand-terracotta-600 font-semibold transition-colors text-sm"
               >
                 &larr; Back to Welcome
               </button>
-            ) : Boolean(showBack) ? (
+            ) : showBack ? (
               <button
                 onClick={onBack}
                 className="text-brand-brown-700 hover:text-brand-terracotta-600 font-semibold transition-colors text-sm"
@@ -52,7 +46,7 @@ const Navigation = ({
           
           {/* Right-side Actions */}
           <div className="flex items-center gap-4 min-w-[160px] justify-end">
-            {Boolean(showNext) ? (
+            {showNext ? (
               <button
                 onClick={onNext}
                 className="text-brand-brown-700 hover:text-brand-terracotta-600 font-semibold transition-colors text-sm"
@@ -67,6 +61,16 @@ const Navigation = ({
       </div>
     </header>
   );
+};
+
+Navigation.propTypes = {
+  showBackToWelcome: PropTypes.bool,
+  showBack: PropTypes.bool,
+  showNext: PropTypes.bool,
+  onBack: PropTypes.func,
+  onNext: PropTypes.func,
+  backText: PropTypes.string,
+  nextText: PropTypes.string,
 };
 
 export default Navigation; 

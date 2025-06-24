@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { ERROR_MESSAGES } from '../utils/constants';
+import PropTypes from 'prop-types';
 
 // LocalStorage keys
 const STORAGE_KEYS = {
@@ -59,7 +60,7 @@ const gameReducer = (state, action) => {
         zkProof: action.payload
       };
     
-    case ACTIONS.TOGGLE_PLAYER_ELIMINATION:
+    case ACTIONS.TOGGLE_PLAYER_ELIMINATION: {
       const { playerId } = action.payload;
       const isEliminated = state.eliminatedPlayers.includes(playerId);
       return {
@@ -68,6 +69,7 @@ const gameReducer = (state, action) => {
           ? state.eliminatedPlayers.filter(id => id !== playerId)
           : [...state.eliminatedPlayers, playerId]
       };
+    }
     
     case ACTIONS.LOAD_FROM_STORAGE:
       return {
@@ -147,6 +149,10 @@ export const GameProvider = ({ children }) => {
       {children}
     </GameContext.Provider>
   );
+};
+
+GameProvider.propTypes = {
+  children: PropTypes.node.isRequired,
 };
 
 // Custom hook to use the context

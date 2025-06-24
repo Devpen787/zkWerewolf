@@ -17,6 +17,7 @@ function App() {
     <ErrorBoundary>
       <GameProvider>
         <Router>
+          <OfflineBanner />
           <Toaster 
             position="top-center"
             reverseOrder={false}
@@ -69,6 +70,30 @@ function MainApp() {
       <Route path="/moderator" element={<ModeratorView />} />
       <Route path="/zk-verification" element={<ZKVerificationPage />} />
     </Routes>
+  );
+}
+
+// Displays a fixed banner if the user is offline
+function OfflineBanner() {
+  const [isOffline, setIsOffline] = React.useState(!navigator.onLine);
+
+  React.useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  if (!isOffline) return null;
+  return (
+    <div className="fixed top-0 left-0 right-0 z-50 bg-yellow-200 text-yellow-900 text-center py-2 font-semibold shadow-md">
+      <span className="mr-2">⚠️</span>
+      You are offline. Some features may not work until you reconnect.
+    </div>
   );
 }
 
