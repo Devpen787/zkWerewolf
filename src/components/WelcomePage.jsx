@@ -9,7 +9,7 @@ import {
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 
-import logoImage from '../assets/Logo.png';
+import logoImage from '../assets/logo.png';
 import villager from '../assets/villager head.png';
 import healer from '../assets/healer head.png';
 import detective from '../assets/detective head.png';
